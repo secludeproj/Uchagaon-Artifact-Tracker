@@ -25,9 +25,10 @@ interface DashboardViewProps {
   currentUser: { name: string; email: string; role: string };
   onNavigate: (view: string, targetId?: string) => void;
   onScanClick: () => void;
+  onSeedData?: () => void;
 }
 
-export default function DashboardView({ artifacts, currentUser, onNavigate, onScanClick }: DashboardViewProps) {
+export default function DashboardView({ artifacts, currentUser, onNavigate, onScanClick, onSeedData }: DashboardViewProps) {
   // Calculations
   const totalCount = artifacts.length;
   
@@ -137,12 +138,22 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
             </p>
           </div>
         </div>
-        <button
-          onClick={onScanClick}
-          className="w-full md:w-auto p-2 px-6 bg-[#3b5249] hover:bg-[#2c3d36] text-white font-mono text-[10px] font-bold uppercase tracking-wider rounded border border-[#2e3f38] shadow hover:shadow-md transition-all shrink-0 cursor-pointer active:scale-95 text-center"
-        >
-          Launch QR Scanner
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto shrink-0">
+          <button
+            onClick={onScanClick}
+            className="p-2 px-6 bg-[#3b5249] hover:bg-[#2c3d36] text-white font-mono text-[10px] font-bold uppercase tracking-wider rounded border border-[#2e3f38] shadow hover:shadow-md transition-all cursor-pointer active:scale-95 text-center"
+          >
+            Launch QR Scanner
+          </button>
+          {artifacts.length === 0 && onSeedData && (
+            <button
+              onClick={onSeedData}
+              className="p-2 px-4 bg-amber-700 hover:bg-amber-800 text-white font-mono text-[10px] font-bold uppercase tracking-wider rounded border border-amber-600 shadow hover:shadow-md transition-all cursor-pointer active:scale-95 text-center"
+            >
+              ✦ Load Sample Artifacts
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Core Metric Rows */}

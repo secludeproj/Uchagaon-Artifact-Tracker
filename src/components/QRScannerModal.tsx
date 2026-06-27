@@ -53,9 +53,9 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
       setDevices(videoDevices);
       if (videoDevices.length > 0 && !selectedDeviceId) {
         // Prefer back camera if available by testing labels
-        const backCamera = videoDevices.find((d) =>
-          d.label.toLowerCase().includes("back") ||
-          d.label.toLowerCase().includes("rear") ||
+        const backCamera = videoDevices.find((d) => 
+          d.label.toLowerCase().includes("back") || 
+          d.label.toLowerCase().includes("rear") || 
           d.label.toLowerCase().includes("environment")
         );
         setSelectedDeviceId(backCamera ? backCamera.deviceId : videoDevices[0].deviceId);
@@ -71,8 +71,8 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
     stopCamera();
 
     const constraints: MediaStreamConstraints = {
-      video: selectedDeviceId
-        ? { deviceId: { exact: selectedDeviceId } }
+      video: selectedDeviceId 
+        ? { deviceId: { exact: selectedDeviceId } } 
         : { facingMode: "environment" }
     };
 
@@ -96,7 +96,7 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
       console.error("Camera source access failed", err);
       setHasPermission(false);
       setErrorMessage(
-        err.message ||
+        err.message || 
         "Unknown security exception. Please verify your browser has given permissions to access your camera device."
       );
     }
@@ -133,13 +133,13 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
         // Match the video dimensions exactly to maintain correct aspect ratio and prevent distortion
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-
+        
         // Draw video frame to hidden processing canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+        
         // Pull down pixels
         const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
+        
         // Push frame payload to jsQR parser (loaded dynamically)
         try {
           const jsQRModule = await import("jsqr");
@@ -231,7 +231,7 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
       setShowManualInput(false);
       setManualCode("");
       setManualError("");
-
+      
       startCamera();
       animationFrameRef.current = requestAnimationFrame(tick);
     } else {
@@ -248,14 +248,14 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Dimmed backdrop blur */}
-      <div
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+      <div 
+        className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       />
 
       {/* Central modal card */}
       <div className="relative bg-[#fdfcf7] border border-[#dcd6c8] w-full max-w-lg rounded-xl shadow-2xl overflow-hidden z-10 font-sans">
-
+        
         {/* Header Block with luxury gold/charcoal palette */}
         <div className="bg-[#1c1a18] p-4 text-white flex items-center justify-between border-b border-[#3e3835]">
           <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
               Heritage QR Scanner Companion
             </span>
           </div>
-          <button
+          <button 
             onClick={onClose}
             className="p-1 hover:bg-[#322f2b] rounded-full text-gray-400 hover:text-white transition-all"
           >
@@ -274,7 +274,7 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
 
         {/* Dynamic Scan Interface Screen */}
         <div className="p-5 space-y-4">
-
+          
           {/* Main scanner panel */}
           {!scannedResult ? (
             <div className="space-y-4">
@@ -282,7 +282,7 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
                 <>
                   {/* Aspect-stabilized Viewfinder frame */}
                   <div className="relative aspect-video w-full bg-black rounded-lg overflow-hidden border border-[#dcd6c8] shadow-inner flex items-center justify-center">
-
+                    
                     {/* Live streaming Camera Video tag */}
                     <video
                       ref={videoRef}
@@ -299,7 +299,7 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
                       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                         {/* Scanning Box Outline */}
                         <div className="w-48 h-48 border-2 border-dashed border-[#dfd6be]/40 relative flex items-center justify-center">
-
+                          
                           {/* Precise neon retro framing brackets */}
                           <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-emerald-500 rounded-tl" />
                           <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-emerald-500 rounded-tr" />
@@ -395,7 +395,7 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
                   <div className="bg-[#eae5d9]/40 border border-[#dcd6c8]/60 p-3 rounded-lg text-xs text-[#6e645a] leading-relaxed">
                     Provide the alpha-numeric artifact ID (e.g. <span className="font-mono bg-white px-1 py-0.5 border rounded">HER-002</span>) or QR code descriptor string printed on the physical display plaque.
                   </div>
-
+                  
                   <div className="space-y-1.5">
                     <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#6e645a]">
                       Plaster / Plaque Serial Code
@@ -460,9 +460,9 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
               {scannedItem ? (
                 <div className="w-full max-w-sm bg-white border border-emerald-100 rounded-lg p-3 pt-4 flex gap-3 text-left shadow-sm">
                   <div className="w-16 h-12 bg-gray-100 rounded overflow-hidden shrink-0 border border-gray-200">
-                    <img
-                      src={scannedItem.photos?.[0]}
-                      alt={scannedItem.name}
+                    <img 
+                      src={scannedItem.photos?.[0]} 
+                      alt={scannedItem.name} 
                       className="w-full h-full object-cover"
                     />
                   </div>

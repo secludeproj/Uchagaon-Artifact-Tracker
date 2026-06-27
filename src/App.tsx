@@ -17,7 +17,7 @@ import {
   fetchProfile,
   bulkInsertArtifacts,
 } from "./lib/db";
-import { signInWithGoogle, signOut, ensureProfile } from "./lib/auth";
+import { seedTestData } from "./lib/seedData";
 
 // Components
 import LoginView from "./components/LoginView";
@@ -658,7 +658,13 @@ export default function App() {
           <div className="animate-in fade-in duration-200">
             {activeView === "dashboard" && (
               <DashboardView artifacts={artifacts} currentUser={currentUser}
-                onNavigate={navigateToView} onScanClick={() => setIsGlobalScannerOpen(true)} />
+                onNavigate={navigateToView}
+                onScanClick={() => setIsGlobalScannerOpen(true)}
+                onSeedData={async () => {
+                  const result = await seedTestData();
+                  if (result.success) await loadAllData();
+                  else alert("Seed failed: " + result.error?.message);
+                }} />
             )}
             {activeView === "all" && (
               <AllArtifactsView artifacts={artifacts} activeFilter={filteredStateMode} onNavigate={navigateToView} />
