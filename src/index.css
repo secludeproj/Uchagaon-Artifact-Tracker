@@ -1,21 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
-@import "tailwindcss";
 
-@theme {
-  --font-serif: "Lora", Georgia, serif;
-  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", Courier, monospace;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   body {
     background-color: #f7f5f0;
     color: #1c1a18;
-    font-family: var(--font-sans);
+    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
   }
 }
 
-/* Print styling for heritage compliance condition report card output and QR codes */
 @media print {
   body, html, #root {
     background: white !important;
@@ -30,11 +26,9 @@
   .print-only {
     display: block !important;
   }
-  /* Collapse layout grids of App.tsx wrapper to prevent column squeezing on print */
   .grid, .lg\:grid-cols-12, .grid-cols-12, .grid-cols-1, .lg\:grid-cols-3 {
     display: block !important;
   }
-  /* Force main columns to expand to fit full width */
   main, .col-span-1, .lg\:col-span-9, .lg\:col-span-8, .max-w-7xl {
     width: 100% !important;
     max-width: 100% !important;
@@ -43,7 +37,6 @@
     border: none !important;
     box-shadow: none !important;
   }
-  /* Restore label print sheet grid specifically inside printable areas */
   .print\:grid-cols-2 {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -54,7 +47,6 @@
   }
 }
 
-/* Ledger paper pinstripe grid feeling for vintage archive presentation */
 .ledger-grid {
   background-image: linear-gradient(rgba(59, 82, 73, 0.05) 1px, transparent 1px);
   background-size: 100% 24px;
