@@ -85,32 +85,28 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
       }
     } catch (err: any) {
       console.error(err);
-      setAiError("Archivist AI link offline or degraded. Fallback local analysis active.");
+      setAiError("Using local search — AI service unavailable.");
       
-      // Local robust offline query fallback
+      // Smart local fallback — search across all fields
       const q = textToSearch.toLowerCase();
-      let matched = artifacts;
-      if (q.includes("armory")) {
-        matched = matched.filter((i: any) => i.currentLocation.toLowerCase().includes("armory") || i.category.toLowerCase().includes("weapon"));
-      }
-      if (q.includes("fair or worse") || q.includes("fair")) {
-        matched = matched.filter((i: any) => ["fair", "poor", "damaged"].includes(i.condition.toLowerCase()));
-      }
-      if (q.includes("room 104")) {
-        matched = matched.filter((i: any) => i.currentLocation.toLowerCase().includes("room 104"));
-      }
-      if (q.includes("temple")) {
-        matched = matched.filter((i: any) => i.originalLocation.toLowerCase().includes("temple"));
-      }
-      if (q.includes("romantic") || q.includes("suite")) {
-        matched = matched.filter((i: any) => 
-          i.name.toLowerCase().includes("mirror") || 
-          i.description.toLowerCase().includes("love") || 
-          i.description.toLowerCase().includes("romantic") || 
-          i.category.toLowerCase().includes("jewelry") ||
-          i.category.toLowerCase().includes("artwork")
-        );
-      }
+      const words = q.split(" ").filter(w => w.length > 2);
+      
+      const matched = artifacts.filter((i: any) => {
+        const searchText = [
+          i.name || "",
+          i.category || "",
+          i.material || "",
+          i.description || "",
+          i.condition || "",
+          i.currentLocation || "",
+          i.originalLocation || "",
+          i.status || "",
+          i.story || "",
+        ].join(" ").toLowerCase();
+        
+        return words.some(word => searchText.includes(word));
+      });
+      
       setAiMatchedIds(matched.map((i: any) => i.id));
     } finally {
       setIsAiLoading(false);

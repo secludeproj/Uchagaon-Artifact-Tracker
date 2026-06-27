@@ -173,41 +173,48 @@ export default function ConservationAnalytics({ artifacts, onNavigate }: Conserv
             
             {/* Horizontal Bar Chart for high-density reading */}
             <div className="h-64 w-full" id="condition-bar-chart">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  layout="vertical"
-                  margin={{ top: 10, right: 30, left: 10, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} stroke="#f0ece2" />
-                  <XAxis 
-                    type="number" 
-                    stroke="#8c7b6c" 
-                    fontSize={10} 
-                    fontFamily="monospace"
-                    tickLine={false}
-                    axisLine={false}
-                    allowDecimals={false}
-                  />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    stroke="#1c1a18" 
-                    fontSize={11} 
-                    fontFamily="Georgia, serif" 
-                    fontWeight="bold"
-                    tickLine={false}
-                    axisLine={false}
-                    width={75}
-                  />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "#fbfaf7", opacity: 0.6 }} />
-                  <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {artifacts.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-[#8e847a] text-xs font-serif italic">
+                  No artifacts registered yet.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    layout="vertical"
+                    margin={{ top: 10, right: 30, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} stroke="#f0ece2" />
+                    <XAxis
+                      type="number"
+                      stroke="#8c7b6c"
+                      fontSize={10}
+                      fontFamily="monospace"
+                      tickLine={false}
+                      axisLine={false}
+                      allowDecimals={false}
+                      domain={[0, 'auto']}
+                    />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      stroke="#1c1a18"
+                      fontSize={11}
+                      fontFamily="Georgia, serif"
+                      fontWeight="bold"
+                      tickLine={false}
+                      axisLine={false}
+                      width={75}
+                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "#fbfaf7", opacity: 0.6 }} />
+                    <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
