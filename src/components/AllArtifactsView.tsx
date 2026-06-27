@@ -162,22 +162,24 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
   // Filter and search computation
   const filteredArtifacts = useMemo(() => {
     return artifacts.filter((item) => {
+      if (!item) return false;
+
       // If AI mode is active and we have matched IDs, filter exclusively by those IDs.
-      // If they haven't queried yet, display all items.
       if (activeSearchMode === "ai") {
-        if (aiMatchedIds !== null) {
+        if (aiMatchedIds !== null && aiMatchedIds.length > 0) {
           return aiMatchedIds.includes(item.id);
         }
-        return true;
+        // No AI results yet — show all
+        return aiMatchedIds === null;
       }
 
       // 1. Text Search matches Name, ID, Description, Material, or locations
-      const matchesSearch = 
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.material.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.currentLocation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.originalLocation.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        (item.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.id || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.material || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.currentLocation || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.originalLocation || "").toLowerCase().includes(searchQuery.toLowerCase());
 
       // 2. Category Dropdown matches
       const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;

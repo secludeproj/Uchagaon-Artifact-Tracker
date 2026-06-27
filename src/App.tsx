@@ -770,26 +770,25 @@ export default function App() {
         <EditProfileModal
           currentUser={currentUser}
           onClose={() => setIsEditProfileOpen(false)}
-          onSave={async (updated) => {
-            try {
-              // Try to save to Supabase if we have a real session
-              const { data: { session } } = await supabase.auth.getSession();
-              if (session?.user) {
-                await upsertProfile(session.user.id, {
-                  name: updated.name,
-                  email: currentUser.email,
-                  role: updated.role,
-                  avatar_url: updated.avatarUrl,
-                });
-              }
-            } catch (err) {
-              console.warn("Profile save to Supabase failed, saving locally:", err);
-            }
-            // Always update local state and storage
+          onSave={(updated) => {
+            // Update local state immediately — no async, no waiting
             const updatedUser = { ...currentUser, ...updated };
             setCurrentUser(updatedUser);
             localStorage.setItem("seclude_operator", JSON.stringify(updatedUser));
             setIsEditProfileOpen(false);
+            // Save to Supabase in background — don't block UI
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              if (session?.user) {
+                supabase.from("profiles").update({
+                  name: updated.name,
+                  role: updated.role,
+                  avatar_url: updated.avatarUrl,
+                  last_active: new Date().toISOString()
+                }).eq("id", session.user.id).then(({ error }) => {
+                  if (error) console.warn("Background profile save error:", error);
+                });
+              }
+            });
           }}
         />
       )}

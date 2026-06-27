@@ -83,12 +83,15 @@ export default function ConservationAnalytics({ artifacts, onNavigate }: Conserv
 
   // Populate counts safely
   artifacts.forEach(item => {
-    const rawCond = item.condition || "Good";
+    if (!item || !item.condition) {
+      counts["Good"]++;
+      return;
+    }
+    const rawCond = String(item.condition || "Good");
     const normalizedCond = (rawCond.charAt(0).toUpperCase() + rawCond.slice(1).toLowerCase()) as ConditionKey;
     if (counts[normalizedCond] !== undefined) {
       counts[normalizedCond]++;
     } else {
-      // Default fallback
       counts["Good"]++;
     }
   });
