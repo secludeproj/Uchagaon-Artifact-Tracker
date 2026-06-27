@@ -93,7 +93,7 @@ export default function App() {
         if (bypass === "true") {
           const saved = localStorage.getItem("seclude_operator");
           if (saved) {
-            try { setCurrentUser(JSON.parse(saved)); } catch { }
+            try { setCurrentUser(JSON.parse(saved)); } catch {}
           }
         }
         setIsAuthLoading(false);
@@ -104,8 +104,17 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
         await handleUserSession(session.user.id, session.user.email || "", session.user.user_metadata?.full_name || "");
+      } else if (event === "TOKEN_REFRESHED" && session?.user) {
+        // Silent token refresh — don't reload data, just update session
+        console.log("Token refreshed silently");
       } else if (event === "SIGNED_OUT") {
+        // Clear everything
+        localStorage.removeItem("seclude_operator");
+        localStorage.removeItem("offline_bypass");
         setCurrentUser(null);
+        setArtifacts([]);
+        setStaff([]);
+        setActivity([]);
         setIsAuthLoading(false);
       }
     });
@@ -142,7 +151,7 @@ export default function App() {
       // Fallback to cache
       const saved = localStorage.getItem("seclude_operator");
       if (saved) {
-        try { setCurrentUser(JSON.parse(saved)); } catch { }
+        try { setCurrentUser(JSON.parse(saved)); } catch {}
       }
     } finally {
       setIsAuthLoading(false);
@@ -417,8 +426,8 @@ export default function App() {
   const handleDownloadFullCSV = () => {
     try {
       if (artifacts.length === 0) return;
-      const headers = ["id", "qrCode", "name", "category", "estimatedAge", "material", "dimensions",
-        "condition", "estimatedValue", "originalLocation", "currentLocation", "status", "lastInspectedDate", "addedDate"];
+      const headers = ["id","qrCode","name","category","estimatedAge","material","dimensions",
+        "condition","estimatedValue","originalLocation","currentLocation","status","lastInspectedDate","addedDate"];
       const csvRows = [
         headers.join(","),
         ...artifacts.map(a =>
@@ -757,15 +766,24 @@ export default function App() {
           currentUser={currentUser}
           onClose={() => setIsEditProfileOpen(false)}
           onSave={async (updated) => {
-            if (!currentUser.id) return;
-            await upsertProfile(currentUser.id, {
-              name: updated.name,
-              email: currentUser.email,
-              role: updated.role,
-              avatar_url: updated.avatarUrl,
-            });
-            setCurrentUser({ ...currentUser, ...updated });
-            localStorage.setItem("seclude_operator", JSON.stringify({ ...currentUser, ...updated }));
+            try {
+              // Try to save to Supabase if we have a real session
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.user) {
+                await upsertProfile(session.user.id, {
+                  name: updated.name,
+                  email: currentUser.email,
+                  role: updated.role,
+                  avatar_url: updated.avatarUrl,
+                });
+              }
+            } catch (err) {
+              console.warn("Profile save to Supabase failed, saving locally:", err);
+            }
+            // Always update local state and storage
+            const updatedUser = { ...currentUser, ...updated };
+            setCurrentUser(updatedUser);
+            localStorage.setItem("seclude_operator", JSON.stringify(updatedUser));
             setIsEditProfileOpen(false);
           }}
         />

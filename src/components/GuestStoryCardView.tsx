@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Artifact } from "../types";
 import { Compass, Sparkles, BookOpen } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { fetchAllArtifacts } from "../lib/db";
 
 interface GuestStoryCardViewProps {
   itemId: string;
@@ -16,13 +18,14 @@ export default function GuestStoryCardView({ itemId }: GuestStoryCardViewProps) 
     async function loadStory() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/story/${itemId}`);
-        if (!res.ok) {
-          throw new Error(`Item ${itemId} not found`);
+        // Fetch directly from Supabase — no server needed
+        const artifacts = await fetchAllArtifacts();
+        const found = artifacts.find(a => a.id === itemId || a.qrCode === itemId);
+        if (!found) {
+          throw new Error(`Item ${itemId} not found in registry`);
         }
-        const data = await res.json();
-        setItem(data.item);
-        setStoryText(data.story);
+        setItem(found);
+        setStoryText(found.story || found.description || "This artifact is part of the Seclude Palace Heritage Collection.");
       } catch (err: any) {
         console.error("Failed to load visitor story card:", err);
         setErrorCode(err.message || "Unable to retrieve heritage files.");
