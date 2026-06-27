@@ -93,7 +93,7 @@ export default function App() {
         if (bypass === "true") {
           const saved = localStorage.getItem("seclude_operator");
           if (saved) {
-            try { setCurrentUser(JSON.parse(saved)); } catch {}
+            try { setCurrentUser(JSON.parse(saved)); } catch { }
           }
         }
         setIsAuthLoading(false);
@@ -142,7 +142,7 @@ export default function App() {
       // Fallback to cache
       const saved = localStorage.getItem("seclude_operator");
       if (saved) {
-        try { setCurrentUser(JSON.parse(saved)); } catch {}
+        try { setCurrentUser(JSON.parse(saved)); } catch { }
       }
     } finally {
       setIsAuthLoading(false);
@@ -253,12 +253,18 @@ export default function App() {
   const handleSignOut = async () => {
     try {
       await signOut();
+    } catch (err) {
+      console.warn("Supabase sign out error (continuing anyway):", err);
+    } finally {
+      // Always clear local state regardless of Supabase session
       localStorage.removeItem("seclude_operator");
       localStorage.removeItem("offline_bypass");
       setCurrentUser(null);
       setArtifacts([]);
-    } catch (err) {
-      console.error("Sign out error:", err);
+      setStaff([]);
+      setActivity([]);
+      // Force page reload to clear all state cleanly
+      window.location.href = "/";
     }
   };
 
@@ -411,8 +417,8 @@ export default function App() {
   const handleDownloadFullCSV = () => {
     try {
       if (artifacts.length === 0) return;
-      const headers = ["id","qrCode","name","category","estimatedAge","material","dimensions",
-        "condition","estimatedValue","originalLocation","currentLocation","status","lastInspectedDate","addedDate"];
+      const headers = ["id", "qrCode", "name", "category", "estimatedAge", "material", "dimensions",
+        "condition", "estimatedValue", "originalLocation", "currentLocation", "status", "lastInspectedDate", "addedDate"];
       const csvRows = [
         headers.join(","),
         ...artifacts.map(a =>
