@@ -88,13 +88,16 @@ export default function App() {
       if (session?.user) {
         await handleUserSession(session.user.id, session.user.email || "", session.user.user_metadata?.full_name || "");
       } else {
-        // Check offline bypass
+        // No Supabase session — only allow offline bypass if explicitly set
         const bypass = localStorage.getItem("offline_bypass");
         if (bypass === "true") {
           const saved = localStorage.getItem("seclude_operator");
           if (saved) {
-            try { setCurrentUser(JSON.parse(saved)); } catch {}
+            try { setCurrentUser(JSON.parse(saved)); } catch { }
           }
+        } else {
+          // No session and no bypass — clear any stale localStorage and show login
+          localStorage.removeItem("seclude_operator");
         }
         setIsAuthLoading(false);
       }
@@ -151,7 +154,7 @@ export default function App() {
       // Fallback to cache
       const saved = localStorage.getItem("seclude_operator");
       if (saved) {
-        try { setCurrentUser(JSON.parse(saved)); } catch {}
+        try { setCurrentUser(JSON.parse(saved)); } catch { }
       }
     } finally {
       setIsAuthLoading(false);
@@ -260,21 +263,23 @@ export default function App() {
   };
 
   const handleSignOut = async () => {
+    // Clear local state first
+    localStorage.removeItem("seclude_operator");
+    localStorage.removeItem("offline_bypass");
+    setCurrentUser(null);
+    setArtifacts([]);
+    setStaff([]);
+    setActivity([]);
+
+    // Sign out from Supabase
     try {
-      await signOut();
+      await supabase.auth.signOut();
     } catch (err) {
-      console.warn("Supabase sign out error (continuing anyway):", err);
-    } finally {
-      // Always clear local state regardless of Supabase session
-      localStorage.removeItem("seclude_operator");
-      localStorage.removeItem("offline_bypass");
-      setCurrentUser(null);
-      setArtifacts([]);
-      setStaff([]);
-      setActivity([]);
-      // Force page reload to clear all state cleanly
-      window.location.href = "/";
+      console.warn("Supabase sign out error:", err);
     }
+
+    // Force full page reload to login screen
+    window.location.href = "/";
   };
 
   // ── Navigation ─────────────────────────────────────────────────────────────
@@ -426,8 +431,8 @@ export default function App() {
   const handleDownloadFullCSV = () => {
     try {
       if (artifacts.length === 0) return;
-      const headers = ["id","qrCode","name","category","estimatedAge","material","dimensions",
-        "condition","estimatedValue","originalLocation","currentLocation","status","lastInspectedDate","addedDate"];
+      const headers = ["id", "qrCode", "name", "category", "estimatedAge", "material", "dimensions",
+        "condition", "estimatedValue", "originalLocation", "currentLocation", "status", "lastInspectedDate", "addedDate"];
       const csvRows = [
         headers.join(","),
         ...artifacts.map(a =>
