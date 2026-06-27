@@ -42,38 +42,30 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
 
     const finalAvatar = useCustomUrl ? customUrl.trim() || "🧑" : avatar;
 
-    try {
-      const updatedProfile = {
-        name: name.trim(),
-        role: role,
-        avatarUrl: finalAvatar,
-        email: currentUser.email
-      };
+    const updatedProfile = {
+      name: name.trim(),
+      role: role,
+      avatarUrl: finalAvatar,
+      email: currentUser.email
+    };
 
+    try {
       // Update profile in Supabase
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        await supabase.from("profiles").update({
+        const { error } = await supabase.from("profiles").update({
           name: updatedProfile.name,
           role: updatedProfile.role,
           avatar_url: updatedProfile.avatarUrl,
           last_active: new Date().toISOString()
         }).eq("id", session.user.id);
+        if (error) console.warn("Profile update error:", error);
       }
-
-      // Update parent state and localStorage
-      onSave(updatedProfile);
     } catch (err: any) {
-      console.warn("Could not save to remote Firestore db, updating local state only:", err);
-      // Fallback: save to local state even if Firestore rules/network fails
-      const updatedProfile = {
-        name: name.trim(),
-        role: role,
-        avatarUrl: finalAvatar,
-        email: currentUser.email
-      };
-      onSave(updatedProfile);
+      console.warn("Could not save to Supabase, saving locally:", err);
     } finally {
+      // Always call onSave and close regardless
+      onSave(updatedProfile);
       setIsSaving(false);
     }
   };

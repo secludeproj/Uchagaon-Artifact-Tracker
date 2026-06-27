@@ -244,7 +244,9 @@ export default function ItemDetailView({
         body: JSON.stringify({
           originalPhotoUrl,
           inspectionPhotoBase64: rawBase64,
-          mimeType: photoMimeType
+          mimeType: photoMimeType,
+          artifactName: item.name,
+          currentCondition: item.condition
         })
       });
 
@@ -253,7 +255,7 @@ export default function ItemDetailView({
       }
 
       const data = await response.json();
-      setComparisonNotes(data.notes || "");
+      setComparisonNotes(data.notes || data.recommendations || "Analysis complete. Please review findings.");
     } catch (err: any) {
       console.error(err);
       setComparisonNotes("Failed to receive automated comparative analysis from Gemini Vision. Please review artifact details manually.");

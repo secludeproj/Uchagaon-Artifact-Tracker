@@ -93,7 +93,7 @@ export default function App() {
         if (bypass === "true") {
           const saved = localStorage.getItem("seclude_operator");
           if (saved) {
-            try { setCurrentUser(JSON.parse(saved)); } catch { }
+            try { setCurrentUser(JSON.parse(saved)); } catch {}
           }
         } else {
           // No session and no bypass — clear any stale localStorage and show login
@@ -154,7 +154,7 @@ export default function App() {
       // Fallback to cache
       const saved = localStorage.getItem("seclude_operator");
       if (saved) {
-        try { setCurrentUser(JSON.parse(saved)); } catch { }
+        try { setCurrentUser(JSON.parse(saved)); } catch {}
       }
     } finally {
       setIsAuthLoading(false);
@@ -270,14 +270,14 @@ export default function App() {
     setArtifacts([]);
     setStaff([]);
     setActivity([]);
-
+    
     // Sign out from Supabase
     try {
       await supabase.auth.signOut();
     } catch (err) {
       console.warn("Supabase sign out error:", err);
     }
-
+    
     // Force full page reload to login screen
     window.location.href = "/";
   };
@@ -431,8 +431,8 @@ export default function App() {
   const handleDownloadFullCSV = () => {
     try {
       if (artifacts.length === 0) return;
-      const headers = ["id", "qrCode", "name", "category", "estimatedAge", "material", "dimensions",
-        "condition", "estimatedValue", "originalLocation", "currentLocation", "status", "lastInspectedDate", "addedDate"];
+      const headers = ["id","qrCode","name","category","estimatedAge","material","dimensions",
+        "condition","estimatedValue","originalLocation","currentLocation","status","lastInspectedDate","addedDate"];
       const csvRows = [
         headers.join(","),
         ...artifacts.map(a =>

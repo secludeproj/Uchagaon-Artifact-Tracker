@@ -79,7 +79,7 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
       });
       if (!res.ok) throw new Error("AI search response error");
       const data = await res.json();
-      setAiMatchedIds(data.matchedIds || []);
+      setAiMatchedIds(data.ids || data.matchedIds || []);
       if (data.warning) {
         setAiError(data.warning);
       }

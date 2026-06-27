@@ -339,9 +339,9 @@ export default function AddEditFormView({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          photoBase64: base64Payload,
+          imageBase64: base64Payload,
           mimeType,
-          photoUrl: activeImg // fallback
+          photoUrl: activeImg
         })
       });
 
