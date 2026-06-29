@@ -46,7 +46,7 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
 
     const updatedProfile = {
       name: name.trim(),
-      role: role,
+      role: currentUser.role, // role is not editable here — only SUPER_ADMIN can change via Admin Panel
       avatarUrl: finalAvatar,
       email: currentUser.email
     };
@@ -181,34 +181,14 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
               )}
             </div>
 
-            {/* Role Options */}
+            {/* Role — read only, only SUPER_ADMIN can change via Admin Panel */}
             <div>
               <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#5c544d] mb-1.5">
-                Assigned Royal Lease Role
+                Assigned Role
               </label>
-              <div className="space-y-1.5">
-                {roleOptions.map((opt) => (
-                  <label
-                    key={opt.value}
-                    id={`role-opt-label-${opt.value}`}
-                    className={`flex items-center gap-3 p-2.5 rounded border transition-all cursor-pointer ${
-                      role === opt.value
-                        ? "bg-[#f2efe6] border-[#3b5249] text-[#1c1a18]"
-                        : "bg-white border-[#c8c2b5] hover:bg-[#faf9f6] text-[#5c544d]"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="assignedRole"
-                      id={`role-radio-${opt.value}`}
-                      value={opt.value}
-                      checked={role === opt.value}
-                      onChange={() => setRole(opt.value)}
-                      className="accent-[#3b5249] h-3.5 w-3.5 shrink-0"
-                    />
-                    <span className="text-xs font-sans font-medium">{opt.label}</span>
-                  </label>
-                ))}
+              <div className="flex items-center gap-2 p-2.5 rounded border border-[#c8c2b5] bg-[#f7f5f0]">
+                <span className="text-xs font-mono font-bold text-[#3b5249]">{currentUser.role}</span>
+                <span className="text-[10px] text-[#8e847a] font-sans">— Role can only be changed by a Super Admin</span>
               </div>
             </div>
 

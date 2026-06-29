@@ -9,7 +9,6 @@ import {
   LogIn, 
   AlertCircle,
   User,
-  WifiOff,
   HelpCircle,
   ExternalLink
 } from "lucide-react";
@@ -41,48 +40,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
     } catch (err: any) {
       console.error("Supabase Google Auth error: ", err);
       setAuthError(err.message || "Google sign-in failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAnonymousSignIn = async () => {
-    setIsLoading(true);
-    setAuthError(null);
-    try {
-      localStorage.setItem("offline_bypass", "true");
-      const simulatedProfile = {
-        id: "guest-user",
-        name: "Imperial Palace Custodian",
-        email: "guest-custodian@secludehotels.com",
-        role: "ADMIN",
-        avatarUrl: "🧑‍💼"
-      };
-      localStorage.setItem("seclude_operator", JSON.stringify(simulatedProfile));
-      onLoginSuccess();
-      window.location.reload();
-    } catch (err: any) {
-      setAuthError("Guest access failed.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleOfflineBypass = () => {
-    setIsLoading(true);
-    try {
-      localStorage.setItem("offline_bypass", "true");
-      const simulatedProfile = {
-        name: "Imperial Palace Custodian",
-        email: "guest-custodian@secludehotels.com",
-        role: "Chief Heritage Conservator",
-        avatarUrl: "🧑‍💼"
-      };
-      localStorage.setItem("seclude_operator", JSON.stringify(simulatedProfile));
-      onLoginSuccess();
-      window.location.reload();
-    } catch (err) {
-      console.error("Offline bypass failed: ", err);
     } finally {
       setIsLoading(false);
     }
@@ -182,7 +139,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     <li>Save settings and try again!</li>
                   </ol>
                   <div className="text-[10px] text-[#b45309] border-t border-[#fef3c7] pt-2">
-                    💡 <strong>Instant Sandbox Option:</strong> Bypass all setup instantly! Click the gold <strong className="font-semibold">"Bypass Auth & Go Offline"</strong> button below to test all heritage features with local operators.
                   </div>
                 </div>
               )}
@@ -224,39 +180,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                 </div>
               )}
 
-              {/* 2. Anonymous Auth not enabled Diagnostic Card */}
-              {errorCode === "auth/operation-not-allowed" && authError.includes("Anonymous") && (
-                <div className="p-4 bg-[#fffbeb] border border-[#f59e0b] rounded text-[#78350f] text-xs font-sans animate-in fade-in duration-300">
-                  <h4 className="font-bold uppercase tracking-wider text-[10px] text-[#b45309] mb-2 font-mono flex items-center gap-1.5">
-                    ⚙️ Action Required: Enable Anonymous Sign-In
-                  </h4>
-                  <p className="leading-relaxed mb-2">
-                    To use Instant Guest Access, please enable the Anonymous sign-in provider in your Supabase project:
-                  </p>
-                  <ol className="list-decimal pl-4 space-y-1.5 text-[11px] leading-relaxed mb-3">
-                    <li>
-                      Go to your{" "}
-                      <a 
-                        href="https://supabase.com/dashboard/project/angular-bruin-lfjbn/authentication/providers" 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="underline font-bold text-[#b45309] hover:text-[#92400e]"
-                      >
-                        Supabase Auth Providers
-                      </a>.
-                    </li>
-                    <li>Click <strong className="font-semibold">"Add new provider"</strong>.</li>
-                    <li>Select <strong className="font-semibold">"Anonymous"</strong> from the options.</li>
-                    <li>Enable the toggle switch and click <strong className="font-semibold">"Save"</strong>.</li>
-                  </ol>
-                  <div className="text-[10px] text-[#b45309] border-t border-[#fef3c7] pt-2">
-                    💡 Or use the <strong>"Bypass Auth & Go Offline"</strong> button below to launch the sandbox instantly with mock records!
-                  </div>
-                </div>
-              )}
-
-              {/* 3. Email Auth not enabled Diagnostic Card */}
-              {errorCode === "auth/operation-not-allowed" && !authError.includes("Anonymous") && (
                 <div className="p-4 bg-[#fffbeb] border border-[#f59e0b] rounded text-[#78350f] text-xs font-sans animate-in fade-in duration-300">
                   <h4 className="font-bold uppercase tracking-wider text-[10px] text-[#b45309] mb-2 font-mono flex items-center gap-1.5">
                     ⚙️ Action Required: Enable Email/Password Provider
@@ -300,7 +223,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     <li>Avoid using Private/Incognito windows for testing Google Auth inside iframe environments.</li>
                   </ul>
                   <p className="text-[10px] text-amber-700 font-serif border-t border-amber-200 pt-2 italic">
-                    Alternative: Click <strong>"Instant Guest Access"</strong> or <strong>"Bypass Auth & Go Offline"</strong> to load the app immediately inside the iframe without storage limits!
                   </p>
                 </div>
               )}
@@ -318,8 +240,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     If you closed the window intentionally, you can log in instantly or work with offline records:
                   </p>
                   <ul className="list-disc pl-4 space-y-1.5 text-[11px] leading-relaxed mb-3">
-                    <li>Click <strong className="font-semibold">"Instant Guest Access"</strong> below to create a quick, temporary cloud profile.</li>
-                    <li>Click <strong className="font-semibold">"Bypass Auth & Go Offline"</strong> to load the sandbox with pre-configured mock data instantly.</li>
+                    
                   </ul>
                 </div>
               )}

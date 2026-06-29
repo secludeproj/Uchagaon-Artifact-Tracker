@@ -183,7 +183,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
       await loadAuditLogs();
       setTimeout(() => setSuccess(""), 4000);
     } catch (err: any) {
-      setError("Save failed: " + err.message + " — Run the SQL fix in Supabase (see below).");
+      setError("Save failed: " + err.message);
     } finally {
       setSavingId(null);
     }
@@ -257,49 +257,6 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
             ← Back
           </button>
         </div>
-      </div>
-
-      {/* SQL Fix Notice */}
-      <div className="p-3 bg-amber-50 border border-amber-200 rounded text-amber-900 text-xs font-sans">
-        <p className="font-bold mb-1">⚠️ One-time Supabase SQL required for admin role changes to work:</p>
-        <code className="block bg-amber-100 p-2 rounded text-[11px] font-mono whitespace-pre-wrap">{`-- Run ONCE in Supabase SQL Editor:
-
--- 1. Add SUPER_ADMIN to allowed roles
-ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
-ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check
-CHECK (role IN ('SUPER_ADMIN', 'ADMIN', 'STAFF', 'OWNER VIEW',
-  'CHIEF HERITAGE CONSERVATOR', 'PRINCIPAL PALACE MUSEOLOGIST',
-  'HERITAGE REGISTRAR & ARCHIVIST', 'PALACE SECURITY OFFICER'));
-
--- 2. Allow SUPER_ADMIN to update any profile
-DROP POLICY IF EXISTS "Admin can update any profile" ON public.profiles;
-CREATE POLICY "Super Admin can update any profile"
-ON public.profiles FOR UPDATE
-USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN')
-);
-
--- 3. Audit log table
-CREATE TABLE IF NOT EXISTS public.admin_audit_logs (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  changed_by text NOT NULL,
-  changed_by_email text NOT NULL,
-  target_email text NOT NULL,
-  old_role text, new_role text,
-  old_name text, new_name text,
-  changed_at timestamptz DEFAULT now()
-);
-ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Admin can read audit logs" ON public.admin_audit_logs;
-CREATE POLICY "Super Admin can read audit logs"
-ON public.admin_audit_logs FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'SUPER_ADMIN')
-);
-CREATE POLICY IF NOT EXISTS "Anyone can insert audit logs"
-ON public.admin_audit_logs FOR INSERT WITH CHECK (true);
-
--- 4. Set your own account as SUPER_ADMIN (replace with your email):
--- UPDATE public.profiles SET role = 'SUPER_ADMIN' WHERE email = 'kamaljyotsingh978@gmail.com';`}</code>
       </div>
 
       {/* Alerts */}
@@ -488,7 +445,7 @@ ON public.admin_audit_logs FOR INSERT WITH CHECK (true);
         {showAudit && (
           <div className="divide-y divide-[#f0ece4] max-h-80 overflow-y-auto">
             {auditLogs.length === 0 ? (
-              <div className="p-6 text-center text-xs font-mono text-gray-400">No changes logged yet. Run the SQL above to enable audit logging.</div>
+              <div className="p-6 text-center text-xs font-mono text-gray-400">No role changes have been made yet.</div>
             ) : auditLogs.map((log) => (
               <div key={log.id} className="px-5 py-3 text-xs">
                 <div className="flex items-center justify-between">

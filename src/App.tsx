@@ -259,8 +259,8 @@ subscription.unsubscribe();
   const navigateToView = (view: string, targetId?: string) => {
     setMobileMenuOpen(false);
     const userRole = currentUser?.role?.trim()?.toUpperCase() || "";
-    const isAdmin = userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
-    const isOwnerView = userRole === "OWNER VIEW" || userRole === "OWNER" || userRole === "READ-ONLY";
+    const isAdmin = userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
+    const isOwnerView = (userRole === "OWNER VIEW" || userRole === "OWNER" || userRole === "READ-ONLY") && userRole !== "SUPER_ADMIN";
 
     let targetView = view;
     if ((view === "reconcile" || view === "team") && !isAdmin) targetView = "dashboard";
@@ -475,7 +475,7 @@ subscription.unsubscribe();
   }
 
   const userRole = currentUser?.role?.trim()?.toUpperCase() || "";
-  const isOwnerView = userRole === "OWNER VIEW" || userRole === "OWNER" || userRole === "READ-ONLY";
+  const isOwnerView = (userRole === "OWNER VIEW" || userRole === "OWNER" || userRole === "READ-ONLY") && userRole !== "SUPER_ADMIN";
 
   return (
     <div className="min-h-screen bg-[#f7f5f0] flex flex-col justify-between">
@@ -585,7 +585,7 @@ subscription.unsubscribe();
                 { id: "admin", label: "Admin Panel", icon: Shield },
               ].filter(m => {
                 if (m.id === "reconcile" || m.id === "team") {
-                  return userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
+                  return userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
                 }
                 if (m.id === "admin") {
                   return userRole === "SUPER_ADMIN";
