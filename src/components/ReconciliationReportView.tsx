@@ -577,7 +577,8 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
                 ESTATE OWNER RECONCILIATION DOSSIER
               </h3>
               <p className="text-[10px] font-mono text-[#6e645a] leading-relaxed uppercase">
-                AUDITED ON: {new Date().toISOString().split("T")[0]} &bull; SECLUDE HOTELS — UCHAGAON FORT
+                AUDITED ON: {new Date().toISOString().split("T")[0]} &bull; <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height:36px;width:auto;display:block;margin:0 auto 8px auto;" />
+                SECLUDE HOTELS — UCHAGAON FORT
               </p>
             </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import ImageCropper from "./ImageCropper";
 import { supabase } from "../lib/supabase";
 import { X, User, Camera, Image, Upload, Check } from "lucide-react";
 
@@ -33,6 +34,7 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
     !isEmoji(currentUser.avatarUrl) ? (currentUser.avatarUrl || "") : ""
   );
   const [uploading, setUploading] = useState(false);
+  const [cropperSrc, setCropperSrc] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -47,11 +49,10 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
     setUploading(true);
     setError("");
     try {
-      // Convert to base64 data URL — works without Supabase Storage bucket
       const reader = new FileReader();
       reader.onload = () => {
-        setPhotoUrl(reader.result as string);
-        setAvatarMode("upload");
+        // Open cropper instead of setting directly
+        setCropperSrc(reader.result as string);
         setUploading(false);
       };
       reader.onerror = () => {
@@ -63,6 +64,12 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
       setError("Upload failed: " + err.message);
       setUploading(false);
     }
+  };
+
+  const handleCropComplete = (croppedDataUrl: string) => {
+    setPhotoUrl(croppedDataUrl);
+    setAvatarMode("upload");
+    setCropperSrc(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,6 +263,16 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
           </form>
         </div>
       </div>
+    </div>
+
+      {/* Image Cropper Modal */}
+      {cropperSrc && (
+        <ImageCropper
+          imageSrc={cropperSrc}
+          onCrop={handleCropComplete}
+          onCancel={() => { setCropperSrc(null); setUploading(false); }}
+        />
+      )}
     </div>
   );
 }

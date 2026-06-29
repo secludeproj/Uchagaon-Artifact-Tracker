@@ -872,11 +872,9 @@ export default function ItemDetailView({
     const htmlContent = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; text-align: center; box-sizing: border-box; background: white; color: #140e0b; font-family: 'Lora', Georgia, serif; padding: 20px;">
         <div style="border: 3px double #dfb06c; padding: 40px; max-width: 440px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); background: white;">
+          <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height:40px;width:auto;display:block;margin:0 auto 8px auto;" />
           <div style="font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8c7b6c; font-weight: bold; margin-bottom: 5px; font-family: sans-serif;">
             Heritage Exhibit Story
-          </div>
-          <div style="font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: #140e0b; font-weight: bold; margin-bottom: 25px; font-family: sans-serif;">
-            Seclude Hotels
           </div>
           
           <div style="font-size: 22px; font-weight: bold; color: #140e0b; margin-bottom: 12px; line-height: 1.3; font-family: Georgia, serif;">
@@ -1047,8 +1045,9 @@ export default function ItemDetailView({
     const htmlContent = `
       <div style="display: flex; align-items: center; justify-content: space-between; border: 2px dashed #3b5249; border-radius: 8px; padding: 16px; margin: 40px auto; max-width: 380px; background: white; color: black; font-family: sans-serif; box-sizing: border-box; gap: 16px;">
         <div style="flex: 1; text-align: left;">
+          <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude" style="height:20px;width:auto;margin-bottom:6px;display:block;" />
           <span style="display: block; font-size: 8px; font-family: monospace; letter-spacing: 0.15em; color: #8c7b6c; font-weight: bold; text-transform: uppercase;">
-            SECLUDE REGISTRY TAG
+            HERITAGE REGISTRY TAG
           </span>
           <span style="display: block; font-size: 15px; font-family: Georgia, serif; font-weight: bold; color: #1c1a18; margin-top: 4px; line-height: 1.2;">
             ${item.name}
