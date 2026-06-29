@@ -34,11 +34,12 @@ import TeamView from "./components/TeamView";
 import QRScannerModal from "./components/QRScannerModal";
 import GuestStoryCardView from "./components/GuestStoryCardView";
 import EditProfileModal from "./components/EditProfileModal";
+import AdminPanel from "./components/AdminPanel";
 
 import {
   Compass, Layers, MapPin, QrCode, FileText, Users,
   User as UserIcon, LogOut, Menu, X, Download, Sparkles,
-  FileSpreadsheet, Camera, Trash2
+  FileSpreadsheet, Camera, Trash2, Shield
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -580,9 +581,13 @@ subscription.unsubscribe();
                 { id: "qrhub", label: "QR Label Hub", icon: QrCode },
                 { id: "reconcile", label: "Lease Reconcile", icon: FileText },
                 { id: "team", label: "Team Activities", icon: Users },
+                { id: "admin", label: "Admin Panel", icon: Shield },
               ].filter(m => {
                 if (m.id === "reconcile" || m.id === "team") {
                   return userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
+                }
+                if (m.id === "admin") {
+                  return userRole === "ADMIN";
                 }
                 return true;
               }).map(m => {
@@ -664,6 +669,9 @@ subscription.unsubscribe();
             {activeView === "team" && (
               <TeamView staff={staff} activity={activity} currentUser={currentUser}
                 onBack={() => navigateToView("dashboard")} />
+            )}
+            {activeView === "admin" && userRole === "ADMIN" && (
+              <AdminPanel currentUser={currentUser} onBack={() => navigateToView("dashboard")} />
             )}
             {activeView === "item-detail" && selectedItemId && (
               <ItemDetailView itemId={selectedItemId} artifacts={artifacts} currentUser={currentUser}
