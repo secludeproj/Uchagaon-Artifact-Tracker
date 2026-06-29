@@ -18,7 +18,6 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
   const [name, setName] = useState(currentUser.name);
   const [avatar, setAvatar] = useState(currentUser.avatarUrl || "🧑");
   const [role, setRole] = useState(currentUser.role || "STAFF");
-  const EMOJI_AVATARS = ["🧑", "👨‍💼", "👩‍💼", "🧑‍🎨", "🧑‍🔬", "🧑‍💻", "👑", "🏛️", "⚔️", "📜", "🎭", "🦁"];
   const isEmojiAvatar = !currentUser.avatarUrl || currentUser.avatarUrl.length <= 4;
   const [useCustomUrl, setUseCustomUrl] = useState(!isEmojiAvatar);
   const [customUrl, setCustomUrl] = useState(!isEmojiAvatar ? (currentUser.avatarUrl || "") : "");
@@ -27,9 +26,9 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
 
   const avatarOptions = ["🧑", "👨💼", "👩💼", "🧑🎨", "🧑🔬", "🧑💻", "👑", "🏛️", "⚔️", "📜", "🎭", "🦁"];
   const roleOptions = [
-    { value: "Admin", label: "Admin (Curation & Full Management)" },
-    { value: "Staff", label: "Staff (Standard Custody Logins)" },
-    { value: "Owner View", label: "Owner View (Royal Audit Oversight)" }
+    { value: "ADMIN", label: "Admin (Curation & Full Management)" },
+    { value: "STAFF", label: "Staff (Standard Custody Logins)" },
+    { value: "OWNER VIEW", label: "Owner View (Royal Audit Oversight)" }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
