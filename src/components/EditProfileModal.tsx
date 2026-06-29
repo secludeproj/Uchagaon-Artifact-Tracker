@@ -57,7 +57,7 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in duration-200">
-      <div
+      <div 
         id="edit-profile-card"
         className="relative w-full max-w-md bg-[#fdfcf7] border-2 border-[#d3cdc0] rounded-lg shadow-2xl overflow-hidden"
       >
@@ -167,10 +167,11 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
                       type="button"
                       id={`seal-opt-${emoji}`}
                       onClick={() => setAvatar(emoji)}
-                      className={`text-2xl p-1.5 rounded transition-all duration-150 flex items-center justify-center cursor-pointer ${avatar === emoji
+                      className={`text-2xl p-1.5 rounded transition-all duration-150 flex items-center justify-center cursor-pointer ${
+                        avatar === emoji
                           ? "bg-[#3b5249] scale-110 shadow-md border border-[#3b5249]"
                           : "hover:bg-[#eae5d9] bg-transparent opacity-75 hover:opacity-100"
-                        }`}
+                      }`}
                     >
                       {emoji}
                     </button>
@@ -189,10 +190,11 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
                   <label
                     key={opt.value}
                     id={`role-opt-label-${opt.value}`}
-                    className={`flex items-center gap-3 p-2.5 rounded border transition-all cursor-pointer ${role === opt.value
+                    className={`flex items-center gap-3 p-2.5 rounded border transition-all cursor-pointer ${
+                      role === opt.value
                         ? "bg-[#f2efe6] border-[#3b5249] text-[#1c1a18]"
                         : "bg-white border-[#c8c2b5] hover:bg-[#faf9f6] text-[#5c544d]"
-                      }`}
+                    }`}
                   >
                     <input
                       type="radio"

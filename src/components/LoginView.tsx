@@ -219,7 +219,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                     <li>Click <strong className="font-semibold">"Add"</strong>, then refresh this page to sign in!</li>
                   </ol>
                   <div className="text-[10px] text-[#b45309] border-t border-[#fef3c7] pt-2">
-                    💡 <strong>Pro Tip:</strong> Alternatively, click the <strong>"Instant Guest Access"</strong> button below to log in immediately without any domain configuration!
+                    
                   </div>
                 </div>
               )}
@@ -363,35 +363,10 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                   Sign in with Google Account
                 </button>
 
-                {/* 2. Instant Guest Access (Supabase Anonymous Auth) */}
-                <button
-                  type="button"
-                  onClick={handleAnonymousSignIn}
-                  className="w-full py-2.5 px-4 border border-[#dfdcd0] bg-[#fdfcf7] hover:bg-[#f5efe4] text-[#332f2b] active:scale-[0.98] transition-all rounded font-bold text-xs flex items-center justify-center gap-2.5 shadow-sm font-mono uppercase tracking-wider cursor-pointer"
-                >
-                  <User className="w-4 h-4 text-[#3b5249]" />
-                  Instant Guest Access (No Popup)
-                </button>
 
-                {/* 3. Offline Sandbox Bypass (Local storage) */}
-                <button
-                  type="button"
-                  onClick={handleOfflineBypass}
-                  className="w-full py-2.5 px-4 border border-[#ebdcc3] bg-[#fbf8f1] hover:bg-[#eae1cd] text-[#6d5e46] active:scale-[0.98] transition-all rounded font-mono font-bold text-[11px] flex items-center justify-center gap-2.5 shadow-sm uppercase tracking-wider cursor-pointer"
-                >
-                  <WifiOff className="w-4 h-4 text-[#8e6e3d]" />
-                  Bypass Auth & Go Offline
-                </button>
               </div>
 
-              {/* Decorative Divider */}
-              <div className="flex items-center my-4 font-mono text-[9px] text-[#9c9388]">
-                <div className="flex-1 h-px bg-[#e2dcce]"></div>
-                <span className="px-2 font-bold tracking-widest uppercase">
-                  OR SECURE AUDIT SIGN-IN
-                </span>
-                <div className="flex-1 h-px bg-[#e2dcce]"></div>
-              </div>
+
 
               {/* Form Tab Toggles */}
               <div className="flex bg-[#f2ede4] p-1 rounded border border-[#dfdcd0] gap-1">
@@ -493,7 +468,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               <ShieldCheck className="w-3.5 h-3.5 text-[#3b5249]" /> 15-Year Palace Lease Binding App
             </span>
             <p className="text-[10px] text-[#8e847a] font-serif leading-relaxed mt-2 italic px-2">
-              Warning: All movements, catalog acquisitions, and condition audits logged herein are legally binding under the Udaipur Palace Royal Lease Agreement Section 9(b). Delete logs are archived permanently.
+              Warning: All movements, catalog acquisitions, and condition audits logged herein are legally binding under the Seclude Palace Royal Lease Agreement Section 9(b). Delete logs are archived permanently.
             </p>
           </div>
         </div>

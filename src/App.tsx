@@ -58,7 +58,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [showBypassButton, setShowBypassButton] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   // Data state
@@ -80,26 +79,14 @@ export default function App() {
   // ── Auth: Listen to Supabase session ───────────────────────────────────────
 
   useEffect(() => {
-    // Show bypass button after 5s
-    const bypassTimer = setTimeout(() => setShowBypassButton(true), 5000);
-
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         await handleUserSession(session.user.id, session.user.email || "", session.user.user_metadata?.full_name || "");
       } else {
-        // No Supabase session — only allow offline bypass if explicitly set
-        const bypass = localStorage.getItem("offline_bypass");
-        if (bypass === "true") {
-          const saved = localStorage.getItem("seclude_operator");
-          if (saved) {
-            try { setCurrentUser(JSON.parse(saved)); } catch { }
-          }
-        } else {
-          // No session and no bypass — clear any stale localStorage and show login
-          localStorage.removeItem("seclude_operator");
-        }
-        setIsAuthLoading(false);
+        // No Supabase session — clear stale data and show login
+        localStorage.removeItem("seclude_operator");
+          setIsAuthLoading(false);
       }
     });
 
@@ -113,8 +100,7 @@ export default function App() {
       } else if (event === "SIGNED_OUT") {
         // Clear everything
         localStorage.removeItem("seclude_operator");
-        localStorage.removeItem("offline_bypass");
-        setCurrentUser(null);
+          setCurrentUser(null);
         setArtifacts([]);
         setStaff([]);
         setActivity([]);
@@ -123,8 +109,7 @@ export default function App() {
     });
 
     return () => {
-      clearTimeout(bypassTimer);
-      subscription.unsubscribe();
+subscription.unsubscribe();
     };
   }, []);
 
@@ -214,22 +199,6 @@ export default function App() {
 
   // ── Auth Handlers ──────────────────────────────────────────────────────────
 
-  const handleBypassLoading = () => {
-    const saved = localStorage.getItem("seclude_operator");
-    const profile = saved ? JSON.parse(saved) : {
-      id: "offline-user",
-      name: "Imperial Palace Custodian",
-      email: "guest-custodian@secludehotels.com",
-      role: "ADMIN",
-    };
-    localStorage.setItem("offline_bypass", "true");
-    localStorage.setItem("seclude_operator", JSON.stringify(profile));
-    setCurrentUser(profile);
-    setShowProfileSetup(false);
-    setIsAuthLoading(false);
-    setActiveView("dashboard");
-  };
-
   const handleLoginSuccess = () => {
     // After Google OAuth, onAuthStateChange fires automatically
   };
@@ -272,14 +241,14 @@ export default function App() {
     setArtifacts([]);
     setStaff([]);
     setActivity([]);
-
+    
     // Sign out from Supabase
     try {
       await supabase.auth.signOut();
     } catch (err) {
       console.warn("Supabase sign out error:", err);
     }
-
+    
     // Force full page reload to login screen
     window.location.href = "/";
   };
@@ -433,8 +402,8 @@ export default function App() {
   const handleDownloadFullCSV = () => {
     try {
       if (artifacts.length === 0) return;
-      const headers = ["id", "qrCode", "name", "category", "estimatedAge", "material", "dimensions",
-        "condition", "estimatedValue", "originalLocation", "currentLocation", "status", "lastInspectedDate", "addedDate"];
+      const headers = ["id","qrCode","name","category","estimatedAge","material","dimensions",
+        "condition","estimatedValue","originalLocation","currentLocation","status","lastInspectedDate","addedDate"];
       const csvRows = [
         headers.join(","),
         ...artifacts.map(a =>
@@ -483,15 +452,7 @@ export default function App() {
           <p className="font-mono text-[9px] tracking-widest text-[#5c544d] uppercase font-bold mt-1">VERIFYING CURATORIAL SIGNATURE</p>
           <div className="h-px bg-gradient-to-r from-transparent via-[#c4bcae] to-transparent my-4"></div>
           <p className="text-xs text-[#6e645a] font-serif italic">Connecting to Supabase Heritage Ledger...</p>
-          {showBypassButton && (
-            <div className="mt-5 pt-4 border-t border-[#eae5d9]">
-              <p className="text-[11px] text-[#8e847a] mb-3 leading-relaxed">Taking longer than expected? Go offline with admin privileges.</p>
-              <button onClick={handleBypassLoading}
-                className="w-full py-2 px-4 bg-[#3b5249] hover:bg-[#2e3f38] text-white rounded text-xs font-mono font-bold tracking-tight shadow-sm transition-all active:scale-95 cursor-pointer">
-                Bypass Check & Go Offline
-              </button>
-            </div>
-          )}
+
         </div>
       </div>
     );
@@ -667,7 +628,7 @@ export default function App() {
           {isLoading && (
             <div className="no-print flex flex-col items-center justify-center p-12 bg-white border rounded mb-4">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-b-0 border-[#3b5249] mb-3"></div>
-              <p className="font-mono text-xs text-gray-500">Synchronizing palace records ledger...</p>
+              <p className="font-mono text-xs text-gray-500">Synchronizing heritage records ledger...</p>
             </div>
           )}
           {inventoryError && (
@@ -731,7 +692,7 @@ export default function App() {
       {/* Footer */}
       <footer className="no-print bg-[#1c1a18] border-t border-[#2e2622] text-[#8e847a] text-[10px] font-mono py-4 text-center mt-12">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 Seclude Hotels Corp. Registered Palace Archives, Udaipur.</p>
+          <p>© 2026 Seclude Hotels Registered Heritage Archives, Uchagaon Fort.</p>
           <p className="mt-1 text-[#6e645a]">All transactions immutably recorded on Supabase PostgreSQL. Row-level security enforced.</p>
         </div>
       </footer>

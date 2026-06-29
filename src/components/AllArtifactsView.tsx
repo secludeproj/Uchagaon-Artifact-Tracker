@@ -71,6 +71,19 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
 
     setIsAiLoading(true);
     setAiError(null);
+
+    // Always do local keyword search first
+    const q = textToSearch.toLowerCase();
+    const words = q.split(/\s+/).filter((w: string) => w.length > 1);
+    const localMatches = artifacts.filter((i: any) => {
+      const searchText = [
+        i.name, i.category, i.material, i.description,
+        i.condition, i.currentLocation, i.originalLocation,
+        i.status, i.story, i.estimatedAge
+      ].filter(Boolean).join(" ").toLowerCase();
+      return words.some((word: string) => searchText.includes(word));
+    }).map((i: any) => i.id);
+
     try {
       const res = await fetch("/api/nlp-query", {
         method: "POST",
@@ -79,39 +92,21 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
       });
       if (!res.ok) throw new Error("AI search response error");
       const data = await res.json();
-      setAiMatchedIds(data.ids || data.matchedIds || []);
-      if (data.warning) {
-        setAiError(data.warning);
-      }
+      const geminiIds = data.ids || data.matchedIds || [];
+      // Merge local + Gemini results, deduplicated
+      const merged = [...new Set([...geminiIds, ...localMatches])];
+      setAiMatchedIds(merged.length > 0 ? merged : localMatches);
     } catch (err: any) {
-      console.error(err);
-      setAiError("Using local search — AI service unavailable.");
-      
-      // Smart local fallback — search across all fields
-      const q = textToSearch.toLowerCase();
-      const words = q.split(" ").filter(w => w.length > 2);
-      
-      const matched = artifacts.filter((i: any) => {
-        const searchText = [
-          i.name || "",
-          i.category || "",
-          i.material || "",
-          i.description || "",
-          i.condition || "",
-          i.currentLocation || "",
-          i.originalLocation || "",
-          i.status || "",
-          i.story || "",
-        ].join(" ").toLowerCase();
-        
-        return words.some(word => searchText.includes(word));
-      });
-      
-      setAiMatchedIds(matched.map((i: any) => i.id));
+      // Gemini unavailable — use local results
+      setAiMatchedIds(localMatches);
+      if (localMatches.length === 0) {
+        setAiError("No matching artifacts found.");
+      }
     } finally {
       setIsAiLoading(false);
     }
   };
+
 
   const handleSuggestionClick = (text: string) => {
     setAiSearchQuery(text);

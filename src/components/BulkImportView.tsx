@@ -15,7 +15,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
   const sampleTemplate = `name,category,estimatedAge,material,condition,estimatedValue,originalLocation,currentLocation,status,handlingNotes
 "Late Mughal Ivory Dagger","Weaponry & Armor","approx. 220 years","Ivory, steel blade","Fair",18000,"Palace North Armory","Hotel Lobby display-1","On Display","Handle with custom gloves"
 "Embroidered Mughal Zardozi Tapestry","Textiles & Carpets","approx. 140/years","Silk filaments, gold threads","Good",35000,"Zenana Dining Salon","Suite Room 102 Lounge","On Display","Keep away from humidity"
-"Udaipur Terracotta Glazed Pot","Ceramics & Pottery","approx. 90 years","Clay, cobalt slip","Poor",4500,"Queens Courtyard Garden","Restaurant Patio Gallery","On Display","Inspect monthly for cracks"`;
+"Uchagaon Terracotta Glazed Pot","Ceramics & Pottery","approx. 90 years","Clay, cobalt slip","Poor",4500,"Queens Courtyard Garden","Restaurant Patio Gallery","On Display","Inspect monthly for cracks"`;
 
   const handleLoadTemplate = () => {
     setCsvContent(sampleTemplate.trim());
@@ -108,7 +108,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
               setCsvContent(e.target.value);
               handleParseCsv(e.target.value);
             }}
-            placeholder={`name,category,estimatedAge,material,condition,estimatedValue,originalLocation,currentLocation,status,handlingNotes\n"Udaipur Sword","Weaponry & Armor","150 years","steel,gold","Good",24000,"East Saloon","Lobby","On Display","No raw hands touch"`}
+            placeholder={`name,category,estimatedAge,material,condition,estimatedValue,originalLocation,currentLocation,status,handlingNotes\n"Uchagaon Sword","Weaponry & Armor","150 years","steel,gold","Good",24000,"East Saloon","Lobby","On Display","No raw hands touch"`}
             rows={10}
             className="w-full text-xs font-mono p-3 bg-[#faf9f6] border border-[#c4beaf] rounded focus:outline-none focus:border-[#3b5249] "
           />

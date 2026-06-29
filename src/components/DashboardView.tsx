@@ -111,10 +111,10 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
             <Sparkles className="w-3 h-3" /> SECLUDE REGISTRY ACTIVE REPORT
           </p>
           <h2 className="font-serif text-2xl font-bold tracking-tight">
-            Palace Custody & Preservation Console
+            Heritage Custody & Preservation Console
           </h2>
           <p className="text-xs text-[#dce6dc] max-w-xl font-serif italic">
-            "We hold the 300-year palace treasures in fiduciary lease, pledged to inspect regularly and restore each artifact to its sovereign place at lease-end."
+            "We hold the heritage artifacts in custody, pledged to inspect regularly and restore each artifact to its sovereign place at lease-end."
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
               Scan Physical QR Code Tag
             </h4>
             <p className="text-xs text-[#5c544d] font-sans leading-relaxed mt-0.5">
-              Point your camera at any Udaipur Palace Trust heritage sticker to immediately identify and pull open its specific registry card, logs, and inspections file.
+              Point your camera at any Seclude heritage sticker to immediately identify and pull open its specific registry card, logs, and inspections file.
             </p>
           </div>
         </div>
@@ -488,7 +488,7 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto opacity-60" />
             <p className="font-serif text-sm font-bold text-[#1c1a18]">All Clear for 90 Days</p>
             <p className="text-[11px] text-[#8e847a] font-sans max-w-xs mx-auto leading-relaxed">
-              No artifacts are due for conservation inspection in the next 90 days. The palace ledger is in excellent custody standing.
+              No artifacts are due for conservation inspection in the next 90 days. The heritage ledger is in excellent custody standing.
             </p>
           </div>
         ) : (

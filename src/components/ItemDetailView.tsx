@@ -865,7 +865,7 @@ export default function ItemDetailView({
             Heritage Exhibit Story
           </div>
           <div style="font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: #140e0b; font-weight: bold; margin-bottom: 25px; font-family: sans-serif;">
-            Seclude Palace Hotel Udaipur
+            Seclude Hotels
           </div>
           
           <div style="font-size: 22px; font-weight: bold; color: #140e0b; margin-bottom: 12px; line-height: 1.3; font-family: Georgia, serif;">
@@ -1922,7 +1922,7 @@ export default function ItemDetailView({
                     S E C L U D E   H O T E L S   H E R I T A G E   A R C H I V E S
                   </span>
                   <h1 className="font-serif text-xl md:text-2xl font-bold text-[#140e0b] tracking-wide uppercase">
-                    Seclude Palace Hotel, Udaipur
+                    Seclude Hotels
                   </h1>
                   <span className="text-[10px] font-sans text-[#736357] uppercase tracking-[0.15em] block font-semibold">
                     Registry and Custody Ledger of Royal Assets
