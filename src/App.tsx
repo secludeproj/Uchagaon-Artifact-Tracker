@@ -778,7 +778,7 @@ export default function App() {
             setCurrentUser(updatedUser);
             localStorage.setItem("seclude_operator", JSON.stringify(updatedUser));
             setIsEditProfileOpen(false);
-            // Save to Supabase in background and refresh from DB
+            // Save to Supabase — role must persist to DB or it resets on next login
             supabase.auth.getSession().then(({ data: { session } }) => {
               if (session?.user) {
                 supabase.from("profiles").update({
@@ -789,12 +789,13 @@ export default function App() {
                 }).eq("id", session.user.id).then(({ error }) => {
                   if (error) {
                     console.warn("Profile save error:", error);
+                    alert("Profile saved locally but could not sync to server: " + error.message);
                   } else {
-                    // Refresh from DB to confirm save
+                    // Confirm from DB
                     fetchProfile(session.user.id).then(profile => {
                       if (profile) {
                         const confirmedUser = {
-                          ...currentUser,
+                          ...updatedUser,
                           name: profile.name,
                           role: profile.role,
                           avatarUrl: profile.avatar_url || undefined,
@@ -805,6 +806,9 @@ export default function App() {
                     });
                   }
                 });
+              } else {
+                // Guest mode — only localStorage, no DB
+                console.log("Guest mode — profile saved to localStorage only");
               }
             });
           }}
