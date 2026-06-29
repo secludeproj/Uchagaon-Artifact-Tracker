@@ -49,6 +49,8 @@ export default function AddEditFormView({
   const [currentLocation, setCurrentLocation] = useState(existingItem?.currentLocation || "Lobby Reception");
   const [status, setStatus] = useState<Artifact["status"]>(existingItem?.status || "In Storage");
   const [handlingNotes, setHandlingNotes] = useState(existingItem?.handlingNotes || "");
+  const [conservationNotes, setConservationNotes] = useState(existingItem?.conservationNotes || "");
+  const [story, setStory] = useState(existingItem?.story || "");
   const [lastInspectedDate, setLastInspectedDate] = useState(existingItem?.lastInspectedDate || new Date().toISOString().split("T")[0]);
 
   // Dynamic location list generation
