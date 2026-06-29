@@ -360,14 +360,15 @@ export default function ItemDetailView({
         
         <div>
           <div style="text-align: center; margin-bottom: 25px;">
+            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height: 40px; width: auto; object-fit: contain; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;" />
             <div style="font-family: sans-serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #8c7b6c; font-weight: bold; margin-bottom: 6px;">
               S E C L U D E   H O T E L S   H E R I T A G E   A R C H I V E S
             </div>
-            <div style="font-size: 20px; font-weight: bold; letter-spacing: 0.1em; color: #140e0b; margin-bottom: 4px;">
-              SECLUDE PALACE HOTEL, UDAIPUR
+            <div style="font-size: 16px; font-weight: bold; letter-spacing: 0.1em; color: #140e0b; margin-bottom: 4px;">
+              UCHAGAON FORT HERITAGE REGISTRY
             </div>
             <div style="font-family: sans-serif; font-size: 9px; letter-spacing: 0.15em; color: #736357; text-transform: uppercase; margin-bottom: 15px;">
-              REGISTRY AND CUSTODY LEDGER OF ROYAL ASSETS
+              REGISTRY AND CUSTODY LEDGER OF HERITAGE ASSETS
             </div>
             <div style="border-bottom: 2px solid #dfb06c; width: 60%; margin: 0 auto 20px auto;"></div>
             
@@ -580,7 +581,7 @@ export default function ItemDetailView({
     doc.setFont("times", "bold");
     doc.setFontSize(14);
     doc.setTextColor(26, 25, 23);
-    doc.text("SECLUDE PALACE HOTEL, UDAIPUR", 105, 29, { align: "center" });
+    doc.text("SECLUDE HOTELS — UCHAGAON FORT", 105, 29, { align: "center" });
 
     doc.setFont("times", "normal");
     doc.setFontSize(9);
@@ -598,6 +599,16 @@ export default function ItemDetailView({
     doc.setFont("times", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(115, 99, 87);
+    // Add logo to PDF
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = "https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png";
+      await new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
+      if (img.complete && img.naturalWidth > 0) {
+        doc.addImage(img, "PNG", 80, 10, 50, 20);
+      }
+    } catch (_) {}
     doc.text(`Certificate ID: ${uniqueId}`, 105, 53, { align: "center" });
     doc.text(`Generated Date: ${timestampString}`, 105, 58, { align: "center" });
 
@@ -919,7 +930,7 @@ export default function ItemDetailView({
       doc.setFont("times", "bold");
       doc.setFontSize(11);
       doc.setTextColor(20, 14, 11);
-      doc.text("SECLUDE PALACE HOTEL, UDAIPUR", 74, 28, { align: "center" });
+      doc.text("SECLUDE HOTELS — UCHAGAON FORT", 74, 28, { align: "center" });
 
       doc.setDrawColor(236, 230, 218);
       doc.line(20, 33, 128, 33);
@@ -1805,7 +1816,7 @@ export default function ItemDetailView({
             {/* Simulated Plaque Preview */}
             <div className="p-5 bg-white border border-[#dfd6be] rounded-lg text-center space-y-3 shadow-inner">
               <span className="text-[9px] uppercase font-serif tracking-widest text-gray-400 block font-bold">
-                SECLUDE PALACE HOTEL UDAIPUR
+                SECLUDE HOTELS — UCHAGAON FORT
               </span>
               <h4 className="font-serif text-md font-bold tracking-tight text-gray-800 leading-tight">
                 {item.name}

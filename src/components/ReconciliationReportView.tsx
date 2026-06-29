@@ -577,7 +577,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
                 ESTATE OWNER RECONCILIATION DOSSIER
               </h3>
               <p className="text-[10px] font-mono text-[#6e645a] leading-relaxed uppercase">
-                AUDITED ON: {new Date().toISOString().split("T")[0]} &bull; SECLUDE PALACE HOTEL UDAIPUR
+                AUDITED ON: {new Date().toISOString().split("T")[0]} &bull; SECLUDE HOTELS — UCHAGAON FORT
               </p>
             </div>
 
@@ -688,7 +688,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
             {/* Official Audit Signature Stamp Signoff block */}
             <div className="pt-12 grid grid-cols-2 gap-8 md:gap-12 font-mono text-[8px] md:text-[9px] uppercase tracking-wider text-[#6e645a] border-t border-dashed border-[#beb39e]">
               <div className="space-y-6">
-                <p>Audited and verified for Palace Lessors: <br /><strong>UDAIPUR HERITAGE COMMISSION TRUSTEE</strong></p>
+                <p>Audited and verified for Heritage Registry: <br /><strong>UCHAGAON HERITAGE REGISTRY TRUSTEE</strong></p>
                 <div className="border-b border-gray-400 w-3/4"></div>
                 <p>Signature & Seal Stamp</p>
               </div>

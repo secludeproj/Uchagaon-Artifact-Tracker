@@ -447,13 +447,16 @@ subscription.unsubscribe();
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f2eb] p-4">
         <div className="w-full max-w-sm bg-[#fdfcf7] border-2 border-[#d3cdc0] rounded-lg shadow-xl p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-[#3b5249]"></div>
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#eae5d9] border border-[#d2cca0] mb-4 text-[#3b5249] animate-spin">
-            <Compass className="w-8 h-8 text-[#3b5249]" />
+          <div className="mb-5">
+            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" className="h-14 w-auto mx-auto object-contain animate-pulse" />
           </div>
-          <h3 className="font-serif text-lg font-bold tracking-tight text-[#1c1a18]">SECURE ACCESS CHECK</h3>
-          <p className="font-mono text-[9px] tracking-widest text-[#5c544d] uppercase font-bold mt-1">VERIFYING CURATORIAL SIGNATURE</p>
-          <div className="h-px bg-gradient-to-r from-transparent via-[#c4bcae] to-transparent my-4"></div>
-          <p className="text-xs text-[#6e645a] font-serif italic">Connecting to Supabase Heritage Ledger...</p>
+          <div className="h-px bg-gradient-to-r from-transparent via-[#c4bcae] to-transparent mb-4"></div>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#3b5249] animate-bounce" style={{animationDelay: "0ms"}}></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#3b5249] animate-bounce" style={{animationDelay: "150ms"}}></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#3b5249] animate-bounce" style={{animationDelay: "300ms"}}></div>
+          </div>
+          <p className="text-xs text-[#6e645a] font-serif italic">Connecting to Heritage Registry...</p>
 
         </div>
       </div>
@@ -489,7 +492,7 @@ subscription.unsubscribe();
               <Compass className="w-5 h-5 text-white" />
             </button>
             <div>
-              <span className="text-[10px] uppercase tracking-widest text-[#a8baa2] font-mono leading-none block font-bold">SECLUDE HOTELS</span>
+              <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" className="h-5 w-auto object-contain mb-1 brightness-0 invert opacity-80" />
               <h1 className="font-serif text-[15px] font-bold tracking-tight text-white leading-none mt-0.5 flex flex-wrap items-center gap-2">
                 <span>SECLUDE INVENTORY MANAGER</span>
                 {isOnline ? (
@@ -513,8 +516,15 @@ subscription.unsubscribe();
           <div className="hidden md:flex items-center gap-4">
             <button onClick={() => setIsEditProfileOpen(true)}
               className="flex items-center gap-2.5 bg-[#2c2725] hover:bg-[#342e2c] p-1.5 px-3 rounded border border-[#3e3835] transition-all cursor-pointer group">
-              <img src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`}
-                alt="curator" className="w-7 h-7 rounded-full bg-[#eae5d9] object-cover shrink-0" referrerPolicy="no-referrer" />
+              <div className="w-7 h-7 rounded-full bg-[#eae5d9] flex items-center justify-center overflow-hidden shrink-0">
+                {currentUser.avatarUrl && currentUser.avatarUrl.length > 4 ? (
+                  <img src={currentUser.avatarUrl}
+                    alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                ) : (
+                  <span className="text-base leading-none">{currentUser.avatarUrl || "🧑"}</span>
+                )}
+              </div>
               <div className="leading-none">
                 <span className="block text-[11px] font-bold font-sans text-[#eae5d9]">{currentUser.name}</span>
                 <span className="block text-[9px] font-mono text-gray-400 mt-0.5">{currentUser.role}</span>

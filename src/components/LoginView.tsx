@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { Compass, Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 
 interface LoginViewProps {
   onLoginSuccess: () => void;
@@ -59,11 +59,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#3b5249] mb-4 shadow-lg">
-            <Compass className="w-8 h-8 text-white" />
-          </div>
+          <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" className="h-16 w-auto mb-2 object-contain" />
           <h1 className="font-serif text-2xl font-bold text-[#1c1a18] tracking-tight">
-            Seclude Heritage Registry
+            Heritage Registry
           </h1>
           <p className="text-xs font-mono text-[#8e847a] mt-1 uppercase tracking-widest">
             Heritage Custody & Preservation Console
@@ -78,10 +76,11 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
 
             {/* Error/Success */}
             {authError && (
-              <div className={`p-3 rounded text-xs font-sans flex items-start gap-2 ${authError.includes("created")
+              <div className={`p-3 rounded text-xs font-sans flex items-start gap-2 ${
+                authError.includes("created") 
                   ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
                   : "bg-red-50 border border-red-200 text-red-800"
-                }`}>
+              }`}>
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{authError}</span>
               </div>
@@ -115,16 +114,18 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               <button
                 type="button"
                 onClick={() => { setIsSignUp(false); setAuthError(null); }}
-                className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${!isSignUp ? "bg-[#3b5249] text-white" : "bg-white text-[#6e645a] hover:bg-[#f5f2eb]"
-                  }`}
+                className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  !isSignUp ? "bg-[#3b5249] text-white" : "bg-white text-[#6e645a] hover:bg-[#f5f2eb]"
+                }`}
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => { setIsSignUp(true); setAuthError(null); }}
-                className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${isSignUp ? "bg-[#3b5249] text-white" : "bg-white text-[#6e645a] hover:bg-[#f5f2eb]"
-                  }`}
+                className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  isSignUp ? "bg-[#3b5249] text-white" : "bg-white text-[#6e645a] hover:bg-[#f5f2eb]"
+                }`}
               >
                 Create Account
               </button>

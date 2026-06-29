@@ -76,7 +76,7 @@ export default function GuestStoryCardView({ itemId }: GuestStoryCardViewProps) 
           SECLUDE PALACE HOTEL
         </span>
         <span className="text-[8px] uppercase tracking-[0.3em] text-[#8c7b6c] font-mono leading-none block mt-1.5">
-          UDAIPUR ROYAL HERITAGE REGISTRY
+          UCHAGAON FORT HERITAGE REGISTRY
         </span>
       </header>
 
