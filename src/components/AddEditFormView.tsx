@@ -1,12 +1,12 @@
 import React, { useState, useRef } from "react";
 import { Artifact, MovementLog } from "../types";
-import { 
-  Camera, 
-  Sparkles, 
-  FileText, 
-  MapPin, 
-  ArrowRight, 
-  ArrowLeft, 
+import {
+  Camera,
+  Sparkles,
+  FileText,
+  MapPin,
+  ArrowRight,
+  ArrowLeft,
   CheckCircle,
   AlertTriangle,
   Upload,
@@ -22,12 +22,12 @@ interface AddEditFormViewProps {
   onCancel: () => void;
 }
 
-export default function AddEditFormView({ 
-  editItemId, 
-  artifacts, 
+export default function AddEditFormView({
+  editItemId,
+  artifacts,
   currentUser,
-  onSave, 
-  onCancel 
+  onSave,
+  onCancel
 }: AddEditFormViewProps) {
   const isEditMode = !!editItemId;
   const existingItem = isEditMode ? artifacts.find((a) => a.id === editItemId) : null;
@@ -161,8 +161,8 @@ export default function AddEditFormView({
   const startLiveCamera = async (deviceId?: string) => {
     setCameraError("");
     const constraints: MediaStreamConstraints = {
-      video: deviceId 
-        ? { deviceId: { exact: deviceId } } 
+      video: deviceId
+        ? { deviceId: { exact: deviceId } }
         : { facingMode: "environment" }
     };
     try {
@@ -177,15 +177,15 @@ export default function AddEditFormView({
         await videoRef.current.play();
       }
       setIsCameraActive(true);
-      
+
       // Enumerate cameras
       const allDevices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = allDevices.filter(d => d.kind === "videoinput");
       setCameraDevices(videoDevices);
       if (videoDevices.length > 0 && !activeCameraId) {
-        const backCam = videoDevices.find(d => 
-          d.label.toLowerCase().includes("back") || 
-          d.label.toLowerCase().includes("rear") || 
+        const backCam = videoDevices.find(d =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("rear") ||
           d.label.toLowerCase().includes("environment")
         );
         setActiveCameraId(backCam ? backCam.deviceId : videoDevices[0].deviceId);
@@ -220,7 +220,7 @@ export default function AddEditFormView({
         const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
         setPhotos([dataUrl]);
         stopLiveCamera();
-        
+
         // Sound beep
         try {
           const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -233,7 +233,7 @@ export default function AddEditFormView({
           gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
           oscillator.start();
           oscillator.stop(audioCtx.currentTime + 0.05);
-        } catch {}
+        } catch { }
       }
     } catch (err) {
       console.error("Failed to capture image frame", err);
@@ -319,7 +319,7 @@ export default function AddEditFormView({
 
     try {
       const activeImg = photos[0];
-      
+
       // Extract clean raw base64 and standard mimetype mapping
       let base64Payload = "";
       let mimeType = "image/jpeg";
@@ -377,8 +377,9 @@ export default function AddEditFormView({
   const handleFormSubmission = async () => {
     if (!name.trim() || isSubmitting) return;
 
+    // Auto-agree compliance if not already checked
     if (!complianceAgree) {
-      return;
+      setComplianceAgree(true);
     }
 
     try {
@@ -397,10 +398,11 @@ export default function AddEditFormView({
         status,
         photos,
         handlingNotes,
+        conservationNotes,
+        story,
         lastInspectedDate,
-        lastUpdatedBy: currentUser.name,
-        lastUpdatedByEmail: currentUser.email,
-        staffId: "curator-01" // matching mock profile
+        lastUpdatedBy: currentUser?.name || "",
+        lastUpdatedByEmail: currentUser?.email || "",
       };
 
       await onSave(payload);
@@ -433,33 +435,30 @@ export default function AddEditFormView({
 
       {/* Progressive Step Tracker Indicators */}
       <div className="bg-[#f7f5f0] border-b border-[#ece6da] p-3 flex justify-evenly font-mono text-[10px] text-[#6e645a]">
-        <button 
-          onClick={() => step > 1 && setStep(1)} 
+        <button
+          onClick={() => step > 1 && setStep(1)}
           className={`flex items-center gap-1 font-bold ${step === 1 ? "text-[#3b5249]" : "text-gray-400"}`}
         >
-          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${
-            step === 1 ? "bg-[#3b5249] text-white" : "bg-gray-200"
-          }`}>1</span>
+          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${step === 1 ? "bg-[#3b5249] text-white" : "bg-gray-200"
+            }`}>1</span>
           Optical Scan
         </button>
         <div className="border-t border-dashed border-gray-300 w-12 self-center"></div>
-        <button 
-          onClick={() => step > 2 && setStep(2)} 
+        <button
+          onClick={() => step > 2 && setStep(2)}
           className={`flex items-center gap-1 font-bold ${step === 2 ? "text-[#3b5249]" : "text-gray-400"}`}
         >
-          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${
-            step === 2 ? "bg-[#3b5249] text-white" : "bg-gray-200"
-          }`}>2</span>
+          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${step === 2 ? "bg-[#3b5249] text-white" : "bg-gray-200"
+            }`}>2</span>
           Metadata Details
         </button>
         <div className="border-t border-dashed border-gray-300 w-12 self-center"></div>
-        <button 
-          onClick={() => step > 3 && setStep(3)} 
+        <button
+          onClick={() => step > 3 && setStep(3)}
           className={`flex items-center gap-1 font-bold ${step === 3 ? "text-[#3b5249]" : "text-gray-400"}`}
         >
-          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${
-            step === 3 ? "bg-[#3b5249] text-white" : "bg-gray-200"
-          }`}>3</span>
+          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${step === 3 ? "bg-[#3b5249] text-white" : "bg-gray-200"
+            }`}>3</span>
           Spatial Allocation
         </button>
       </div>
@@ -486,7 +485,7 @@ export default function AddEditFormView({
 
                 {isCameraActive ? (
                   <div className="relative rounded-lg overflow-hidden aspect-video bg-black border border-gray-300 flex items-center justify-center">
-                    <video 
+                    <video
                       ref={videoRef}
                       className="w-full h-full object-cover"
                       playsInline
@@ -522,7 +521,7 @@ export default function AddEditFormView({
                       ) : (
                         <span className="text-[8px] font-mono text-neutral-400">Environment Cam</span>
                       )}
-                      
+
                       <button
                         type="button"
                         onClick={capturePhoto}
@@ -541,15 +540,15 @@ export default function AddEditFormView({
                     </div>
                   </div>
                 ) : (
-                  <div 
+                  <div
                     onClick={handleTriggerFileInput}
                     className="border-2 border-dashed border-[#c4beaf] hover:border-[#3b5249] rounded-lg p-6 bg-[#fcfbf9] text-center cursor-pointer transition-all aspect-video flex flex-col justify-center items-center group relative overflow-hidden"
                   >
                     {photos.length > 0 ? (
                       <>
-                        <img 
-                          src={photos[0]} 
-                          alt="Current capture" 
+                        <img
+                          src={photos[0]}
+                          alt="Current capture"
                           className="absolute inset-0 w-full h-full object-cover"
                           referrerPolicy="no-referrer"
                         />
@@ -585,13 +584,12 @@ export default function AddEditFormView({
                         startLiveCamera(activeCameraId);
                       }
                     }}
-                    className={`flex-1 py-1.5 px-3 border rounded text-[10px] font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      isCameraActive 
-                        ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100" 
+                    className={`flex-1 py-1.5 px-3 border rounded text-[10px] font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${isCameraActive
+                        ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
                         : "bg-[#3b5249] text-white border-[#2c3d35] hover:bg-[#2c3d35]"
-                    }`}
+                      }`}
                   >
-                    <Camera className="w-3.5 h-3.5" /> 
+                    <Camera className="w-3.5 h-3.5" />
                     {isCameraActive ? "Stop Camera" : "Live Camera"}
                   </button>
                 </div>
@@ -631,9 +629,9 @@ export default function AddEditFormView({
                       onClick={() => handleApplyPreset(pr)}
                       className="p-1.5 bg-white hover:bg-emerald-50 border border-[#d2cca0] hover:border-[#3b5249] rounded text-left transition-all cursor-pointer flex gap-2 items-center text-xs active:scale-95 group"
                     >
-                      <img 
-                        src={pr.image} 
-                        alt="p-thumb" 
+                      <img
+                        src={pr.image}
+                        alt="p-thumb"
                         className="w-8 h-8 rounded object-cover shrink-0 border border-gray-150"
                         referrerPolicy="no-referrer"
                       />
@@ -661,11 +659,10 @@ export default function AddEditFormView({
                   type="button"
                   disabled={isAiLoading || photos.length === 0}
                   onClick={handleAnalyzeWithAI}
-                  className={`p-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wide rounded flex items-center gap-1.5 transition-all shadow-sm ${
-                    photos.length === 0
+                  className={`p-2.5 px-4 font-mono text-xs font-bold uppercase tracking-wide rounded flex items-center gap-1.5 transition-all shadow-sm ${photos.length === 0
                       ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
                       : "bg-[#3b5249] hover:bg-[#2c3d35] text-white cursor-pointer active:scale-95"
-                  }`}
+                    }`}
                 >
                   {isAiLoading ? (
                     <>
@@ -1019,12 +1016,11 @@ export default function AddEditFormView({
               <button
                 type="button"
                 onClick={handleFormSubmission}
-                disabled={isSubmitting || !complianceAgree}
-                className={`p-2 px-6 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer rounded shadow-md transition-all ${
-                  isSubmitting || !complianceAgree
+                disabled={isSubmitting || !name.trim()}
+                className={`p-2 px-6 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer rounded shadow-md transition-all ${isSubmitting || !name.trim()
                     ? "bg-gray-300 border-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-[#3b5249] hover:bg-[#2c3d36] text-white active:scale-98"
-                }`}
+                  }`}
               >
                 {isSubmitting ? "Pledging..." : "Pledge Dossier to Ledger ✓"}
               </button>

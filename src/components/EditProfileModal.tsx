@@ -17,9 +17,11 @@ interface EditProfileModalProps {
 export default function EditProfileModal({ currentUser, onClose, onSave }: EditProfileModalProps) {
   const [name, setName] = useState(currentUser.name);
   const [avatar, setAvatar] = useState(currentUser.avatarUrl || "🧑");
-  const [role, setRole] = useState(currentUser.role || "Staff");
-  const [useCustomUrl, setUseCustomUrl] = useState(!["🧑", "👨💼", "👩💼", "🧑🎨", "🧑🔬", "🧑💻", "👑", "🏛️", "⚔️", "📜", "🎭", "🦁"].includes(currentUser.avatarUrl));
-  const [customUrl, setCustomUrl] = useState(!["🧑", "👨💼", "👩💼", "🧑🎨", "🧑🔬", "🧑💻", "👑", "🏛️", "⚔️", "📜", "🎭", "🦁"].includes(currentUser.avatarUrl) ? currentUser.avatarUrl : "");
+  const [role, setRole] = useState(currentUser.role || "STAFF");
+  const EMOJI_AVATARS = ["🧑", "👨‍💼", "👩‍💼", "🧑‍🎨", "🧑‍🔬", "🧑‍💻", "👑", "🏛️", "⚔️", "📜", "🎭", "🦁"];
+  const isEmojiAvatar = !currentUser.avatarUrl || currentUser.avatarUrl.length <= 4;
+  const [useCustomUrl, setUseCustomUrl] = useState(!isEmojiAvatar);
+  const [customUrl, setCustomUrl] = useState(!isEmojiAvatar ? (currentUser.avatarUrl || "") : "");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -167,8 +169,8 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
                       id={`seal-opt-${emoji}`}
                       onClick={() => setAvatar(emoji)}
                       className={`text-2xl p-1.5 rounded transition-all duration-150 flex items-center justify-center cursor-pointer ${avatar === emoji
-                        ? "bg-[#3b5249] scale-110 shadow-md border border-[#3b5249]"
-                        : "hover:bg-[#eae5d9] bg-transparent opacity-75 hover:opacity-100"
+                          ? "bg-[#3b5249] scale-110 shadow-md border border-[#3b5249]"
+                          : "hover:bg-[#eae5d9] bg-transparent opacity-75 hover:opacity-100"
                         }`}
                     >
                       {emoji}
@@ -189,8 +191,8 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
                     key={opt.value}
                     id={`role-opt-label-${opt.value}`}
                     className={`flex items-center gap-3 p-2.5 rounded border transition-all cursor-pointer ${role === opt.value
-                      ? "bg-[#f2efe6] border-[#3b5249] text-[#1c1a18]"
-                      : "bg-white border-[#c8c2b5] hover:bg-[#faf9f6] text-[#5c544d]"
+                        ? "bg-[#f2efe6] border-[#3b5249] text-[#1c1a18]"
+                        : "bg-white border-[#c8c2b5] hover:bg-[#faf9f6] text-[#5c544d]"
                       }`}
                   >
                     <input
