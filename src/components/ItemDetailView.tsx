@@ -360,7 +360,7 @@ export default function ItemDetailView({
         
         <div>
           <div style="text-align: center; margin-bottom: 25px;">
-            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height: 40px; width: auto; object-fit: contain; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;" />
+            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height: 56px; width: auto; display: block; margin: 0 auto 12px auto;" />
             <div style="font-family: sans-serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #8c7b6c; font-weight: bold; margin-bottom: 6px;">
               S E C L U D E   H O T E L S   H E R I T A G E   A R C H I V E S
             </div>

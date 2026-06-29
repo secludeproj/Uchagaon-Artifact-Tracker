@@ -447,8 +447,11 @@ subscription.unsubscribe();
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f2eb] p-4">
         <div className="w-full max-w-sm bg-[#fdfcf7] border-2 border-[#d3cdc0] rounded-lg shadow-xl p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-[#3b5249]"></div>
-          <div className="mb-5">
-            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" className="h-14 w-auto mx-auto object-contain animate-pulse" />
+          <div className="mb-5 flex justify-center">
+            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" 
+              alt="Seclude Hotels" 
+              style={{maxHeight:"70px", width:"auto"}}
+              className="animate-pulse" />
           </div>
           <div className="h-px bg-gradient-to-r from-transparent via-[#c4bcae] to-transparent mb-4"></div>
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -492,7 +495,11 @@ subscription.unsubscribe();
               <Compass className="w-5 h-5 text-white" />
             </button>
             <div>
-              <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" className="h-5 w-auto object-contain mb-1 brightness-0 invert opacity-80" />
+              <img 
+                src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" 
+                alt="Seclude Hotels" 
+                style={{height:"24px", width:"auto", filter:"brightness(0) invert(1)", opacity:"0.85", marginBottom:"2px", display:"block"}}
+              />
               <h1 className="font-serif text-[15px] font-bold tracking-tight text-white leading-none mt-0.5 flex flex-wrap items-center gap-2">
                 <span>SECLUDE INVENTORY MANAGER</span>
                 {isOnline ? (
@@ -711,7 +718,12 @@ subscription.unsubscribe();
       {/* Footer */}
       <footer className="no-print bg-[#1c1a18] border-t border-[#2e2622] text-[#8e847a] text-[10px] font-mono py-4 text-center mt-12">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 Seclude Hotels Registered Heritage Archives, Uchagaon Fort.</p>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" 
+              alt="Seclude" 
+              style={{height:"18px", width:"auto", filter:"brightness(0) invert(1)", opacity:"0.5"}} />
+            <span>© 2026 Seclude Hotels. Heritage Inventory Registry — Uchagaon Fort.</span>
+          </div>
           <p className="mt-1 text-[#6e645a]">All transactions immutably recorded on Supabase PostgreSQL. Row-level security enforced.</p>
         </div>
       </footer>

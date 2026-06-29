@@ -59,8 +59,10 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" className="h-16 w-auto mb-2 object-contain" />
-          <h1 className="font-serif text-2xl font-bold text-[#1c1a18] tracking-tight">
+          <div className="mb-4 flex justify-center">
+            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style={{maxHeight:"80px", width:"auto", display:"block"}} />
+          </div>
+          <h1 className="font-serif text-xl font-bold text-[#1c1a18] tracking-tight">
             Heritage Registry
           </h1>
           <p className="text-xs font-mono text-[#8e847a] mt-1 uppercase tracking-widest">

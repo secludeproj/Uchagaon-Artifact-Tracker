@@ -269,7 +269,7 @@ export default function QRHubView({ artifacts, onBack }: QRHubViewProps) {
                   <div className="space-y-1.5 min-w-0 relative">
                     {/* Tiny watermark */}
                     <span className="block text-[7px] font-mono tracking-widest text-[#8e847a] uppercase font-bold leading-none">
-                      <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude" style={{height:"18px",objectFit:"contain",filter:"brightness(0)"}} /> HERITAGE
+                      <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style={{height:"22px",width:"auto",display:"block",margin:"0 auto 4px auto"}} />
                     </span>
                     <h4 className="font-serif text-xs font-bold text-[#1c1a18] tracking-tight leading-normal line-clamp-2 pr-1">
                       {item.name}
