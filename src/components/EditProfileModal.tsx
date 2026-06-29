@@ -95,8 +95,9 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-[#fdfcf7] border-2 border-[#d3cdc0] rounded-lg shadow-2xl overflow-hidden">
+    <>
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="relative w-full max-w-md bg-[#fdfcf7] border-2 border-[#d3cdc0] rounded-lg shadow-2xl overflow-hidden">
         <div className="h-1.5 bg-[#3b5249] w-full"></div>
 
         {/* Close */}
@@ -263,7 +264,6 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
           </form>
         </div>
       </div>
-    </div>
 
       {/* Image Cropper Modal */}
       {cropperSrc && (
@@ -273,6 +273,6 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
           onCancel={() => { setCropperSrc(null); setUploading(false); }}
         />
       )}
-    </div>
+    </>
   );
 }
