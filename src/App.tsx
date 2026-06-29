@@ -93,7 +93,7 @@ export default function App() {
         if (bypass === "true") {
           const saved = localStorage.getItem("seclude_operator");
           if (saved) {
-            try { setCurrentUser(JSON.parse(saved)); } catch {}
+            try { setCurrentUser(JSON.parse(saved)); } catch { }
           }
         } else {
           // No session and no bypass — clear any stale localStorage and show login
@@ -130,14 +130,18 @@ export default function App() {
 
   const handleUserSession = async (userId: string, email: string, name: string) => {
     setIsAuthLoading(true);
+    // Always clear any guest/bypass data first — real auth takes priority
+    localStorage.removeItem("offline_bypass");
+
     try {
       let profile = await fetchProfile(userId);
       if (!profile) {
-        // New user — need profile setup
+        // New Google user — show profile setup
         setShowProfileSetup(true);
         setIsAuthLoading(false);
         return;
       }
+      // ALWAYS use Supabase profile data — never localStorage for real users
       const user: CurrentUser = {
         id: userId,
         name: profile.name,
@@ -146,16 +150,14 @@ export default function App() {
         avatarUrl: profile.avatar_url || undefined,
       };
       setCurrentUser(user);
+      // Store only as a convenience cache — will be overridden on next login
       localStorage.setItem("seclude_operator", JSON.stringify(user));
       setShowProfileSetup(false);
       await loadAllData();
     } catch (err) {
       console.warn("Session load error:", err);
-      // Fallback to cache
-      const saved = localStorage.getItem("seclude_operator");
-      if (saved) {
-        try { setCurrentUser(JSON.parse(saved)); } catch {}
-      }
+      // Network error — show login rather than fall back to stale/guest cache
+      setCurrentUser(null);
     } finally {
       setIsAuthLoading(false);
     }
@@ -270,14 +272,14 @@ export default function App() {
     setArtifacts([]);
     setStaff([]);
     setActivity([]);
-    
+
     // Sign out from Supabase
     try {
       await supabase.auth.signOut();
     } catch (err) {
       console.warn("Supabase sign out error:", err);
     }
-    
+
     // Force full page reload to login screen
     window.location.href = "/";
   };
@@ -431,8 +433,8 @@ export default function App() {
   const handleDownloadFullCSV = () => {
     try {
       if (artifacts.length === 0) return;
-      const headers = ["id","qrCode","name","category","estimatedAge","material","dimensions",
-        "condition","estimatedValue","originalLocation","currentLocation","status","lastInspectedDate","addedDate"];
+      const headers = ["id", "qrCode", "name", "category", "estimatedAge", "material", "dimensions",
+        "condition", "estimatedValue", "originalLocation", "currentLocation", "status", "lastInspectedDate", "addedDate"];
       const csvRows = [
         headers.join(","),
         ...artifacts.map(a =>
@@ -771,21 +773,37 @@ export default function App() {
           currentUser={currentUser}
           onClose={() => setIsEditProfileOpen(false)}
           onSave={(updated) => {
-            // Update local state immediately — no async, no waiting
+            // Update local state immediately for instant UI feedback
             const updatedUser = { ...currentUser, ...updated };
             setCurrentUser(updatedUser);
             localStorage.setItem("seclude_operator", JSON.stringify(updatedUser));
             setIsEditProfileOpen(false);
-            // Save to Supabase in background — don't block UI
+            // Save to Supabase in background and refresh from DB
             supabase.auth.getSession().then(({ data: { session } }) => {
               if (session?.user) {
                 supabase.from("profiles").update({
                   name: updated.name,
                   role: updated.role,
-                  avatar_url: updated.avatarUrl,
+                  avatar_url: updated.avatarUrl || null,
                   last_active: new Date().toISOString()
                 }).eq("id", session.user.id).then(({ error }) => {
-                  if (error) console.warn("Background profile save error:", error);
+                  if (error) {
+                    console.warn("Profile save error:", error);
+                  } else {
+                    // Refresh from DB to confirm save
+                    fetchProfile(session.user.id).then(profile => {
+                      if (profile) {
+                        const confirmedUser = {
+                          ...currentUser,
+                          name: profile.name,
+                          role: profile.role,
+                          avatarUrl: profile.avatar_url || undefined,
+                        };
+                        setCurrentUser(confirmedUser);
+                        localStorage.setItem("seclude_operator", JSON.stringify(confirmedUser));
+                      }
+                    });
+                  }
                 });
               }
             });
