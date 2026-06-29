@@ -264,6 +264,7 @@ subscription.unsubscribe();
 
     let targetView = view;
     if ((view === "reconcile" || view === "team") && !isAdmin) targetView = "dashboard";
+    if (view === "admin" && userRole !== "SUPER_ADMIN") targetView = "dashboard";
     if ((view === "add" || view === "edit" || view === "bulk") && isOwnerView) targetView = "dashboard";
 
     setActiveView(targetView);
@@ -587,7 +588,7 @@ subscription.unsubscribe();
                   return userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
                 }
                 if (m.id === "admin") {
-                  return userRole === "ADMIN";
+                  return userRole === "SUPER_ADMIN";
                 }
                 return true;
               }).map(m => {
@@ -670,7 +671,7 @@ subscription.unsubscribe();
               <TeamView staff={staff} activity={activity} currentUser={currentUser}
                 onBack={() => navigateToView("dashboard")} />
             )}
-            {activeView === "admin" && userRole === "ADMIN" && (
+            {activeView === "admin" && userRole === "SUPER_ADMIN" && (
               <AdminPanel currentUser={currentUser} onBack={() => navigateToView("dashboard")} />
             )}
             {activeView === "item-detail" && selectedItemId && (

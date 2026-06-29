@@ -28,7 +28,8 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
   const roleOptions = [
     { value: "ADMIN", label: "Admin (Curation & Full Management)" },
     { value: "STAFF", label: "Staff (Standard Custody Logins)" },
-    { value: "OWNER VIEW", label: "Owner View (Royal Audit Oversight)" }
+    { value: "OWNER VIEW", label: "Owner View (Royal Audit Oversight)" },
+    { value: "SUPER_ADMIN", label: "Super Admin (Full System Control)" }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
