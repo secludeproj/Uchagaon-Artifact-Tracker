@@ -136,8 +136,8 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
               VERIFY PREVIEW ({previewRows.length} RECORDS PARSED)
             </span>
 
-            <div className="border border-[#e2dbce] rounded overflow-hidden divide-y divide-[#ece6da] bg-white max-h-44 overflow-y-auto">
-              <table className="min-w-full text-left text-xs text-[#1c1a18] font-sans">
+            <div className="border border-[#e2dbce] rounded overflow-hidden divide-y divide-[#ece6da] bg-white max-h-44 overflow-y-auto overflow-x-auto">
+              <table className="min-w-[500px] sm:min-w-full text-left text-xs text-[#1c1a18] font-sans">
                 <thead className="bg-[#f0ece2] font-mono text-[9px] uppercase tracking-wide text-[#6e645a] sticky top-0 border-b border-[#e2dbce]">
                   <tr>
                     <th className="p-2 py-1 px-3">Name</th>

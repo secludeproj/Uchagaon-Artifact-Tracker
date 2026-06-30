@@ -40,10 +40,37 @@ Return a JSON object with these exact fields:
       })
     });
 
+    if (!res.ok) {
+      const errText = await res.text();
+      return new Response(JSON.stringify({ error: `Gemini API request failed (${res.status}): ${errText.slice(0, 200)}` }), {
+        status: 502, headers: { "Content-Type": "application/json" }
+      });
+    }
+
     const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+
+    if (data.error) {
+      return new Response(JSON.stringify({ error: `Gemini API error: ${data.error.message || JSON.stringify(data.error)}` }), {
+        status: 502, headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!text) {
+      return new Response(JSON.stringify({ error: "Gemini returned an empty response. The image may be unclear, unsupported, or blocked by safety filters." }), {
+        status: 502, headers: { "Content-Type": "application/json" }
+      });
+    }
+
     const clean = text.replace(/```json|```/g, "").trim();
-    const result = JSON.parse(clean);
+    let result: any;
+    try {
+      result = JSON.parse(clean);
+    } catch (parseErr) {
+      return new Response(JSON.stringify({ error: "Gemini response could not be parsed as JSON. Please try again with a clearer photo." }), {
+        status: 502, headers: { "Content-Type": "application/json" }
+      });
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { "Content-Type": "application/json" }

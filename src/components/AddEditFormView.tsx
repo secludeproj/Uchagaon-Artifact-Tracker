@@ -332,9 +332,27 @@ export default function AddEditFormView({
         const mimeMatch = parts[0].match(/:(.*?);/);
         if (mimeMatch) mimeType = mimeMatch[1];
       } else {
-        // If it's a direct online Unsplash URL, translate it silently on the backend
-        // Express endpoint can fetch it, but to satisfy direct transfer, we pass it via back-channel
-        base64Payload = ""; // empty forces server fallback or custom mock load
+        // Remote URL (e.g. stock preset) — fetch it client-side and convert to base64
+        // so the backend always receives actual image bytes, never an empty payload.
+        const imgResponse = await fetch(activeImg);
+        if (!imgResponse.ok) {
+          throw new Error("Could not load the selected reference photo for analysis.");
+        }
+        const blob = await imgResponse.blob();
+        mimeType = blob.type || "image/jpeg";
+        base64Payload = await new Promise<string>((resolve, reject) => {
+          const fr = new FileReader();
+          fr.onload = () => {
+            const result = fr.result as string;
+            resolve(result.split(",")[1] || "");
+          };
+          fr.onerror = reject;
+          fr.readAsDataURL(blob);
+        });
+      }
+
+      if (!base64Payload) {
+        throw new Error("No image data available to analyze. Please upload a photo or choose a preset again.");
       }
 
       const response = await fetch("/api/identify", {
@@ -352,6 +370,14 @@ export default function AddEditFormView({
       }
 
       const data = await response.json();
+
+      // Surface any error the backend reported, instead of silently no-oping
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      if (!data.name && !data.category && !data.description) {
+        throw new Error("Gemini AI could not confidently identify this artifact. Try a clearer photo, or fill in details manually.");
+      }
 
       // Successfully returned Gemini curated attributes
       setName(data.name || name);

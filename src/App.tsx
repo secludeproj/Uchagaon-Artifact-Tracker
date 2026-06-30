@@ -336,7 +336,7 @@ subscription.unsubscribe();
   };
 
   const handleUpdateItem = async (id: string, updatedFields: Partial<Artifact>) => {
-    if (!currentUser) return;
+    if (!currentUser) throw new Error("You must be signed in to update an artifact.");
     const user = { name: currentUser.name, email: currentUser.email };
     try {
       await updateArtifact(id, updatedFields, user);
@@ -356,6 +356,9 @@ subscription.unsubscribe();
       await loadAllData();
     } catch (err: any) {
       console.error("Update error:", err);
+      // Re-throw so the calling component can surface this to the user —
+      // previously this was swallowed here, causing silent failed updates.
+      throw new Error(err?.message || "Failed to save update. Please check your connection and try again.");
     }
   };
 
@@ -503,8 +506,9 @@ subscription.unsubscribe();
                 tone="light"
                 style={{ height: "26px", width: "auto", opacity: "0.95", marginBottom: "2px", display: "block" }}
               />
-              <h1 className="font-serif text-[15px] font-bold tracking-tight text-white leading-none mt-0.5 flex flex-wrap items-center gap-2">
-                <span>SECLUDE INVENTORY MANAGER</span>
+              <h1 className="font-serif text-[13px] sm:text-[15px] font-bold tracking-tight text-white leading-none mt-0.5 flex flex-wrap items-center gap-2">
+                <span className="hidden sm:inline">SECLUDE INVENTORY MANAGER</span>
+                <span className="inline sm:hidden">SECLUDE</span>
                 {isOnline ? (
                   <span className="inline-flex items-center gap-1 text-[8px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-900 leading-none shadow-sm">
                     <span className="w-1 h-1 rounded-full bg-emerald-400"></span> LIVE
