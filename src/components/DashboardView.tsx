@@ -474,10 +474,10 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
               </button>
             )}
             <button
-              onClick={() => onNavigate("all")}
+              onClick={() => onNavigate("conservation")}
               className="flex items-center gap-1.5 bg-[#3b5249] text-white px-3 py-1.5 rounded text-[10px] font-mono font-bold uppercase tracking-wide hover:bg-[#2e3f38] transition-all cursor-pointer"
             >
-              View All <ChevronRight className="w-3 h-3" />
+              Manage Schedule <ChevronRight className="w-3 h-3" />
             </button>
           </div>
         </div>

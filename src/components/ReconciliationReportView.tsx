@@ -107,67 +107,72 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
 
   // Correlate active system inventory against uploaded list
   const runReconciliation = (csvRows: any[]) => {
-    const activeAudited = [...artifacts];
-    const usedSystemIds = new Set<string>();
-    const usedSystemNames = new Set<string>();
-    
-    const matchedAnalysisList: ReconciledItem[] = [];
+    try {
+      const activeAudited = [...artifacts].filter(a => a && a.id);
+      const usedSystemIds = new Set<string>();
+      const usedSystemNames = new Set<string>();
+      
+      const matchedAnalysisList: ReconciledItem[] = [];
 
-    // Process original palace inventory records
-    csvRows.forEach((row, rIdx) => {
-      const rawId = (row.id || row["item id"] || row["asset id"] || row["code"] || row["identifier"] || "").trim();
-      const rawName = (row.name || row["item name"] || row["title"] || row["artifact name"] || "").trim();
-      const rawLoc = (row.location || row["original location"] || row["spot"] || row["leased location"] || row["room"] || "").trim();
-      const rawCond = (row.condition || row["state"] || row["quality"] || row["condition level"] || "Good").trim();
-      const rawCategory = (row.category || row["type"] || row["item category"] || "Unspecified").trim();
-      const rawValue = parseFloat((row.value || row["estimated value"] || row["price"] || row["worth"] || "0").replace(/[^0-9.]/g, "")) || 0;
+      // Process original lease inventory records
+      csvRows.forEach((row, rIdx) => {
+        if (!row) return;
+        const rawId = String(row.id || row["item id"] || row["asset id"] || row["code"] || row["identifier"] || "").trim();
+        const rawName = String(row.name || row["item name"] || row["title"] || row["artifact name"] || "").trim();
+        const rawLoc = String(row.location || row["original location"] || row["spot"] || row["leased location"] || row["room"] || "").trim();
+        const rawCond = String(row.condition || row["state"] || row["quality"] || row["condition level"] || "Good").trim();
+        const rawCategory = String(row.category || row["type"] || row["item category"] || "Unspecified").trim();
+        const rawValue = parseFloat(String(row.value || row["estimated value"] || row["price"] || row["worth"] || "0").replace(/[^0-9.]/g, "")) || 0;
 
-      if (!rawName && !rawId) return; // Skip empty rows
+        if (!rawName && !rawId) return; // Skip empty rows
 
-      // Try searching by ID
-      let sysMatch = activeAudited.find(
-        (a) => rawId !== "" && a.id.toLowerCase().trim() === rawId.toLowerCase().trim()
-      );
-
-      // Try searching by name if no ID match
-      if (!sysMatch) {
-        sysMatch = activeAudited.find(
-          (a) => a.name.toLowerCase().trim() === rawName.toLowerCase().trim() && !usedSystemNames.has(a.name)
+        // Try searching by ID
+        let sysMatch = activeAudited.find(
+          (a) => rawId !== "" && (a.id || "").toLowerCase().trim() === rawId.toLowerCase().trim()
         );
-      }
 
-      if (sysMatch) {
-        usedSystemIds.add(sysMatch.id);
-        usedSystemNames.add(sysMatch.name);
-
-        const locDiffer = sysMatch.currentLocation.toLowerCase().trim() !== rawLoc.toLowerCase().trim();
-        const condDiffer = sysMatch.condition.toLowerCase().trim() !== rawCond.toLowerCase().trim();
-
-        let classification: "Matched" | "Relocated" | "Condition Changed" = "Matched";
-        let notes = "Verified matching in perfect cataloged location and quality.";
-
-        if (condDiffer) {
-          classification = "Condition Changed";
-          notes = `Condition alert! Original Lease: '${rawCond}', Current: '${sysMatch.condition}'`;
-        } else if (locDiffer) {
-          classification = "Relocated";
-          notes = `Relocated: Leased to '${rawLoc}', but active in '${sysMatch.currentLocation}'`;
+        // Try searching by name if no ID match
+        if (!sysMatch) {
+          sysMatch = activeAudited.find(
+            (a) => (a.name || "").toLowerCase().trim() === rawName.toLowerCase().trim() && !usedSystemNames.has(a.name || "")
+          );
         }
 
-        matchedAnalysisList.push({
-          id: sysMatch.id,
-          name: sysMatch.name,
-          category: sysMatch.category || rawCategory,
-          estimatedValue: sysMatch.estimatedValue || rawValue,
-          originalLocation: rawLoc,
-          originalCondition: rawCond,
-          currentLocation: sysMatch.currentLocation,
-          currentCondition: sysMatch.condition,
-          status: sysMatch.status,
-          classification,
-          notes
-        });
-      } else {
+        if (sysMatch) {
+          usedSystemIds.add(sysMatch.id);
+          usedSystemNames.add(sysMatch.name || "");
+
+          const sysLocation = sysMatch.currentLocation || "";
+          const sysCondition = sysMatch.condition || "";
+
+          const locDiffer = sysLocation.toLowerCase().trim() !== rawLoc.toLowerCase().trim();
+          const condDiffer = sysCondition.toLowerCase().trim() !== rawCond.toLowerCase().trim();
+
+          let classification: "Matched" | "Relocated" | "Condition Changed" = "Matched";
+          let notes = "Verified matching in catalogued location and quality.";
+
+          if (condDiffer) {
+            classification = "Condition Changed";
+            notes = `Condition alert! Original Lease: '${rawCond}', Current: '${sysCondition}'`;
+          } else if (locDiffer) {
+            classification = "Relocated";
+            notes = `Relocated: Leased to '${rawLoc}', but active in '${sysLocation}'`;
+          }
+
+          matchedAnalysisList.push({
+            id: sysMatch.id,
+            name: sysMatch.name || rawName,
+            category: sysMatch.category || rawCategory,
+            estimatedValue: sysMatch.estimatedValue || rawValue,
+            originalLocation: rawLoc,
+            originalCondition: rawCond,
+            currentLocation: sysLocation,
+            currentCondition: sysCondition,
+            status: sysMatch.status || "Unknown",
+            classification,
+            notes
+          });
+        } else {
         // Missing! Exists in Original lease CSV, but not found in current live inventory system
         matchedAnalysisList.push({
           id: rawId || `PRE-${100 + rIdx}`,
@@ -187,25 +192,29 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
 
     // Add remaining system-only items (Added: In system, but wasn't in original tenant CSV)
     activeAudited.forEach((sysItem) => {
-      if (!usedSystemIds.has(sysItem.id) && !usedSystemNames.has(sysItem.name)) {
+      if (!usedSystemIds.has(sysItem.id) && !usedSystemNames.has(sysItem.name || "")) {
         matchedAnalysisList.push({
           id: sysItem.id,
-          name: sysItem.name,
-          category: sysItem.category,
-          estimatedValue: sysItem.estimatedValue,
+          name: sysItem.name || "Unnamed Item",
+          category: sysItem.category || "Unspecified",
+          estimatedValue: sysItem.estimatedValue || 0,
           originalLocation: "NOT IN LEASE RECORD",
           originalCondition: "NOT IN LEASE RECORD",
-          currentLocation: sysItem.currentLocation,
-          currentCondition: sysItem.condition,
-          status: sysItem.status,
+          currentLocation: sysItem.currentLocation || "",
+          currentCondition: sysItem.condition || "",
+          status: sysItem.status || "Unknown",
           classification: "Added",
           notes: "Newer acquisition or undocumented custom addition. Exists in database, but absent from owner's original list."
         });
       }
     });
 
-    setReconciledList(matchedAnalysisList);
-    setCsvUploaded(true);
+      setReconciledList(matchedAnalysisList);
+      setCsvUploaded(true);
+    } catch (err: any) {
+      console.error("Reconciliation error:", err);
+      alert("Failed to process reconciliation: " + (err.message || "Unknown error"));
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

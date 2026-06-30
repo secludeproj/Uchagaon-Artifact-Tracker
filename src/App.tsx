@@ -35,11 +35,12 @@ import QRScannerModal from "./components/QRScannerModal";
 import GuestStoryCardView from "./components/GuestStoryCardView";
 import EditProfileModal from "./components/EditProfileModal";
 import AdminPanel from "./components/AdminPanel";
+import ConservationScheduleView from "./components/ConservationScheduleView";
 
 import {
   Compass, Layers, MapPin, QrCode, FileText, Users,
   User as UserIcon, LogOut, Menu, X, Download, Sparkles,
-  FileSpreadsheet, Camera, Trash2, Shield
+  FileSpreadsheet, Camera, Trash2, Shield, CalendarDays
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -596,6 +597,7 @@ subscription.unsubscribe();
                 { id: "dashboard", label: "Dashboard", icon: Compass },
                 { id: "all", label: "All Artifacts", icon: Layers },
                 { id: "location", label: "By Location", icon: MapPin },
+                { id: "conservation", label: "Conservation Schedule", icon: CalendarDays },
                 { id: "qrhub", label: "QR Label Hub", icon: QrCode },
                 { id: "reconcile", label: "Lease Reconcile", icon: FileText },
                 { id: "team", label: "Team Activities", icon: Users },
@@ -690,6 +692,10 @@ subscription.unsubscribe();
             )}
             {activeView === "admin" && userRole === "SUPER_ADMIN" && (
               <AdminPanel currentUser={currentUser} onBack={() => navigateToView("dashboard")} />
+            )}
+            {activeView === "conservation" && (
+              <ConservationScheduleView artifacts={artifacts} currentUser={currentUser}
+                onBack={() => navigateToView("dashboard")} onNavigate={navigateToView} />
             )}
             {activeView === "item-detail" && selectedItemId && (
               <ItemDetailView itemId={selectedItemId} artifacts={artifacts} currentUser={currentUser}

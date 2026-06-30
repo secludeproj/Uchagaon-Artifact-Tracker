@@ -16,8 +16,8 @@ interface EditProfileModalProps {
 }
 
 const EMOJI_LIST = [
-  "🧑", "👨‍💼", "👩‍💼", "🧑‍🎨", "🧑‍🔬", "🧑‍💻", "👑", "🏛️", "⚔️", "📜", "🎭", "🦁",
-  "🌿", "🔑", "🛡️", "✨", "🦅", "🌺", "🏺", "🗝️", "🦚", "🎯"
+  "🧑","👨‍💼","👩‍💼","🧑‍🎨","🧑‍🔬","🧑‍💻","👑","🏛️","⚔️","📜","🎭","🦁",
+  "🌿","🔑","🛡️","✨","🦅","🌺","🏺","🗝️","🦚","🎯"
 ];
 
 const isEmoji = (val: string | undefined) => !val || val.length <= 4;
@@ -150,8 +150,9 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
                   {(["emoji", "upload", "url"] as const).map((mode) => (
                     <button key={mode} type="button"
                       onClick={() => setAvatarMode(mode)}
-                      className={`flex-1 py-1.5 text-[11px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${avatarMode === mode ? "bg-[#3b5249] text-white" : "bg-white text-[#6e645a] hover:bg-[#f5f2eb]"
-                        }`}>
+                      className={`flex-1 py-1.5 text-[11px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                        avatarMode === mode ? "bg-[#3b5249] text-white" : "bg-white text-[#6e645a] hover:bg-[#f5f2eb]"
+                      }`}>
                       {mode === "emoji" ? "Emoji" : mode === "upload" ? "Photo" : "URL"}
                     </button>
                   ))}
@@ -161,10 +162,11 @@ export default function EditProfileModal({ currentUser, onClose, onSave }: EditP
                   <div className="grid grid-cols-7 gap-1.5 bg-[#f8f6f0] p-3 rounded border border-[#e5dfd3]">
                     {EMOJI_LIST.map((emoji) => (
                       <button key={emoji} type="button" onClick={() => setSelectedEmoji(emoji)}
-                        className={`text-2xl p-1 rounded transition-all cursor-pointer flex items-center justify-center ${selectedEmoji === emoji && avatarMode === "emoji"
+                        className={`text-2xl p-1 rounded transition-all cursor-pointer flex items-center justify-center ${
+                          selectedEmoji === emoji && avatarMode === "emoji"
                             ? "bg-[#3b5249] scale-110 shadow ring-2 ring-[#3b5249]"
                             : "hover:bg-[#eae5d9]"
-                          }`}>
+                        }`}>
                         {emoji}
                       </button>
                     ))}
