@@ -247,3 +247,39 @@ create index idx_movement_logs_artifact_id on public.movement_logs(artifact_id);
 create index idx_inspection_logs_artifact_id on public.inspection_logs(artifact_id);
 create index idx_team_activity_timestamp on public.team_activity(timestamp desc);
 
+
+-- ============================================
+-- CONSERVATION SCHEDULE TABLE (added later)
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.conservation_schedule (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  artifact_id text REFERENCES public.artifacts(id) ON DELETE CASCADE,
+  planned_date date,
+  assigned_to text DEFAULT '',
+  priority text DEFAULT 'Medium' CHECK (priority IN ('High', 'Medium', 'Low')),
+  notes text DEFAULT '',
+  created_by text NOT NULL,
+  created_by_email text DEFAULT '',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.conservation_schedule ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated read conservation schedule"
+ON public.conservation_schedule FOR SELECT
+USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated insert conservation schedule"
+ON public.conservation_schedule FOR INSERT
+WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated update conservation schedule"
+ON public.conservation_schedule FOR UPDATE
+USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated delete conservation schedule"
+ON public.conservation_schedule FOR DELETE
+USING (auth.role() = 'authenticated');
+
+CREATE INDEX idx_conservation_schedule_artifact ON public.conservation_schedule(artifact_id);

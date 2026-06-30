@@ -356,3 +356,77 @@ export async function bulkInsertArtifacts(
   if (error) throw error;
   return data?.length || 0;
 }
+
+// ── Conservation Schedule ──────────────────────────────────────────────────────
+
+export interface ScheduleNote {
+  id?: string;
+  artifactId: string;
+  plannedDate: string;
+  assignedTo: string;
+  notes: string;
+  priority: "High" | "Medium" | "Low";
+  createdBy: string;
+  createdByEmail?: string;
+  createdAt: string;
+}
+
+export async function fetchConservationSchedule(): Promise<Record<string, ScheduleNote>> {
+  const { data, error } = await supabase
+    .from("conservation_schedule")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.warn("Could not fetch conservation schedule:", error);
+    return {};
+  }
+
+  const result: Record<string, ScheduleNote> = {};
+  (data || []).forEach((row: any) => {
+    // Keep only the most recent note per artifact
+    if (!result[row.artifact_id]) {
+      result[row.artifact_id] = {
+        id: row.id,
+        artifactId: row.artifact_id,
+        plannedDate: row.planned_date || "",
+        assignedTo: row.assigned_to || "",
+        notes: row.notes || "",
+        priority: row.priority || "Medium",
+        createdBy: row.created_by || "",
+        createdByEmail: row.created_by_email || "",
+        createdAt: row.created_at,
+      };
+    }
+  });
+  return result;
+}
+
+export async function saveConservationSchedule(
+  note: ScheduleNote,
+  user: { name: string; email: string }
+): Promise<void> {
+  // Delete any existing note for this artifact first (keep only one active plan per artifact)
+  await supabase.from("conservation_schedule").delete().eq("artifact_id", note.artifactId);
+
+  const { error } = await supabase.from("conservation_schedule").insert({
+    artifact_id: note.artifactId,
+    planned_date: note.plannedDate || null,
+    assigned_to: note.assignedTo,
+    priority: note.priority,
+    notes: note.notes,
+    created_by: user.name,
+    created_by_email: user.email,
+  });
+
+  if (error) throw error;
+}
+
+export async function deleteConservationSchedule(artifactId: string): Promise<void> {
+  const { error } = await supabase
+    .from("conservation_schedule")
+    .delete()
+    .eq("artifact_id", artifactId);
+
+  if (error) throw error;
+}

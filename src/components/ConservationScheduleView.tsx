@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Artifact } from "../types";
 import { supabase } from "../lib/supabase";
+import { fetchConservationSchedule, saveConservationSchedule, deleteConservationSchedule, ScheduleNote as DbScheduleNote } from "../lib/db";
 import {
   CalendarDays, Clock, AlertTriangle, CheckCircle2, User, Search,
   Filter, ArrowRight, ChevronDown, ChevronUp, Plus, X, Save
@@ -13,15 +14,7 @@ interface ConservationScheduleViewProps {
   onNavigate: (view: string, targetId?: string) => void;
 }
 
-interface ScheduleNote {
-  artifactId: string;
-  plannedDate: string;
-  assignedTo: string;
-  notes: string;
-  priority: "High" | "Medium" | "Low";
-  createdBy: string;
-  createdAt: string;
-}
+// ScheduleNote type imported from lib/db.ts as DbScheduleNote
 
 const TODAY = new Date();
 
@@ -29,10 +22,19 @@ export default function ConservationScheduleView({ artifacts, currentUser, onBac
   const [filterStatus, setFilterStatus] = useState<"all" | "overdue" | "upcoming" | "scheduled" | "done">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [scheduleNotes, setScheduleNotes] = useState<Record<string, ScheduleNote>>({});
+  const [scheduleNotes, setScheduleNotes] = useState<Record<string, DbScheduleNote>>({});
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
-  const [noteForm, setNoteForm] = useState<Partial<ScheduleNote>>({});
+  const [noteForm, setNoteForm] = useState<Partial<DbScheduleNote>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
+
+  // Load schedule notes from Supabase on mount
+  React.useEffect(() => {
+    fetchConservationSchedule().then(notes => {
+      setScheduleNotes(notes);
+      setIsLoadingSchedule(false);
+    });
+  }, []);
 
   // Calculate conservation status for each artifact
   const scheduleData = useMemo(() => {
@@ -105,26 +107,38 @@ export default function ConservationScheduleView({ artifacts, currentUser, onBac
   const saveNote = async () => {
     if (!editingNoteId) return;
     setIsSaving(true);
-    const newNote: ScheduleNote = {
+    const newNote: DbScheduleNote = {
       artifactId: editingNoteId,
       plannedDate: noteForm.plannedDate || "",
       assignedTo: noteForm.assignedTo || "",
       notes: noteForm.notes || "",
       priority: (noteForm.priority as any) || "Medium",
       createdBy: currentUser.name,
+      createdByEmail: currentUser.email,
       createdAt: new Date().toISOString(),
     };
-    setScheduleNotes(prev => ({ ...prev, [editingNoteId]: newNote }));
-    setEditingNoteId(null);
-    setIsSaving(false);
+    try {
+      await saveConservationSchedule(newNote, { name: currentUser.name, email: currentUser.email });
+      setScheduleNotes(prev => ({ ...prev, [editingNoteId]: newNote }));
+      setEditingNoteId(null);
+    } catch (err: any) {
+      alert("Failed to save schedule: " + err.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const removeNote = (artifactId: string) => {
-    setScheduleNotes(prev => {
-      const copy = { ...prev };
-      delete copy[artifactId];
-      return copy;
-    });
+  const removeNote = async (artifactId: string) => {
+    try {
+      await deleteConservationSchedule(artifactId);
+      setScheduleNotes(prev => {
+        const copy = { ...prev };
+        delete copy[artifactId];
+        return copy;
+      });
+    } catch (err: any) {
+      alert("Failed to remove schedule: " + err.message);
+    }
   };
 
   const statusConfig = {

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Artifact, MovementLog } from "../types";
+import { supabase } from "../lib/supabase";
 import QRGenerator from "./QRGenerator";
 import ConservationTimelineView from "./ConservationTimelineView";
 import { jsPDF } from "jspdf";
@@ -80,6 +81,21 @@ export default function ItemDetailView({
 
   // Conservation Timeline full-screen view state
   const [showTimeline, setShowTimeline] = useState(false);
+  const [schedulePlan, setSchedulePlan] = useState<any>(null);
+
+  useEffect(() => {
+    if (!item?.id) return;
+    supabase
+      .from("conservation_schedule")
+      .select("*")
+      .eq("artifact_id", item.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) setSchedulePlan(data[0]);
+        else setSchedulePlan(null);
+      });
+  }, [item?.id]);
 
   // Custody Certificate state
   const [showCustodyCertificateModal, setShowCustodyCertificateModal] = useState(false);
@@ -1348,6 +1364,40 @@ export default function ItemDetailView({
                   {item.handlingNotes || "Apply standard archival ledgers protocols. No specialized rules declared."}
                 </div>
               </div>
+
+              {/* Scheduled Conservation Plan */}
+              {schedulePlan && (
+                <div className="p-3.5 bg-[#f4faf3] border border-[#bfe0c0] rounded space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#1c6e35]">📅 Scheduled Inspection Plan</span>
+                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                      schedulePlan.priority === "High" ? "bg-red-100 text-red-800 border-red-300" :
+                      schedulePlan.priority === "Low" ? "bg-blue-100 text-blue-800 border-blue-300" :
+                      "bg-amber-100 text-amber-800 border-amber-300"
+                    }`}>
+                      {schedulePlan.priority} Priority
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="font-mono text-[9px] text-gray-400 uppercase block">Planned Date</span>
+                      <span className="font-bold text-[#1c1a18]">{schedulePlan.planned_date || "Not set"}</span>
+                    </div>
+                    <div>
+                      <span className="font-mono text-[9px] text-gray-400 uppercase block">Assigned To</span>
+                      <span className="font-bold text-[#1c1a18]">{schedulePlan.assigned_to || "Unassigned"}</span>
+                    </div>
+                  </div>
+                  {schedulePlan.notes && (
+                    <div className="text-[11px] text-[#5c544d] leading-relaxed">
+                      <strong className="text-gray-700">Notes:</strong> {schedulePlan.notes}
+                    </div>
+                  )}
+                  <p className="text-[9px] font-mono text-gray-400">
+                    Created by {schedulePlan.created_by} · {new Date(schedulePlan.created_at).toLocaleDateString("en-IN")}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Inline Forensic Photo & Condition Analysis Tool */}

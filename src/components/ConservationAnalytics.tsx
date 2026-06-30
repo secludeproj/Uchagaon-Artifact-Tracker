@@ -116,8 +116,11 @@ export default function ConservationAnalytics({ artifacts, onNavigate }: Conserv
   // Custom styling for chart Tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const meta = conditionMeta[data.name as ConditionKey];
+      const data = payload[0]?.payload;
+      if (!data) return null;
+      const meta = conditionMeta[data.name as ConditionKey] || {
+        color: "#8c7b6c", priority: "", desc: ""
+      };
       return (
         <div className="bg-white border border-[#dfd6be] p-3 rounded shadow-md text-xs font-serif max-w-[220px]">
           <p className="font-bold text-[#140e0b] flex items-center gap-1.5">

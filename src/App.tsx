@@ -36,6 +36,7 @@ import GuestStoryCardView from "./components/GuestStoryCardView";
 import EditProfileModal from "./components/EditProfileModal";
 import AdminPanel from "./components/AdminPanel";
 import ConservationScheduleView from "./components/ConservationScheduleView";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 import {
   Compass, Layers, MapPin, QrCode, FileText, Users,
@@ -664,6 +665,7 @@ subscription.unsubscribe();
           )}
 
           <div className="animate-in fade-in duration-200">
+            <ErrorBoundary fallbackLabel="This section failed to load.">
             {activeView === "dashboard" && (
               <DashboardView artifacts={artifacts} currentUser={currentUser}
                 onNavigate={navigateToView}
@@ -717,6 +719,7 @@ subscription.unsubscribe();
               <BulkImportView onImportSuccess={handleBulkImportSuccess}
                 onCancel={() => navigateToView("dashboard")} />
             )}
+            </ErrorBoundary>
           </div>
         </main>
       </div>
