@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import SecludeLogo from "./SecludeLogo";
 
 interface LoginViewProps {
   onLoginSuccess: () => void;
@@ -60,7 +61,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mb-4 flex justify-center">
-            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style={{maxHeight:"80px", width:"auto", display:"block"}} />
+            <SecludeLogo style={{ height: "64px", width: "auto", display: "block", margin: "0 auto" }} className="text-[#3b5249]" />
           </div>
           <h1 className="font-serif text-xl font-bold text-[#1c1a18] tracking-tight">
             Heritage Registry

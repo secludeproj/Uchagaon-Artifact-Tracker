@@ -83,6 +83,29 @@ export default function ItemDetailView({
   const [showTimeline, setShowTimeline] = useState(false);
   const [schedulePlan, setSchedulePlan] = useState<any>(null);
 
+  // Shared helper: render the self-hosted Seclude SVG logo to a PNG data URL for jsPDF
+  // (seclude.in blocks hotlinking with a 403, so we use our own vector recreation)
+  const loadSecludeLogoForPdf = async (): Promise<string | null> => {
+    try {
+      const svgDataUri = "data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMzIwIDkwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBmaWxsPSJub25lIiBzdHJva2U9IiMzYjUyNDkiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KPHBhdGggZD0iTTQwIDgyIEM0MCA2NSwgNDAgNTIsIDQwIDQwIiAvPgo8cGF0aCBkPSJNNDAgNTIgQzMyIDQ4LCAyNiA0MSwgMjggMzMgQzMwIDI3LCAzOCAyNywgNDAgMzMgQzQyIDI3LCA1MCAyNywgNTIgMzMgQzU0IDQxLCA0OCA0OCwgNDAgNTIiIC8+CjxjaXJjbGUgY3g9IjI4IiBjeT0iMzMiIHI9IjMuMiIgZmlsbD0iIzNiNTI0OSIgLz4KPGNpcmNsZSBjeD0iNTIiIGN5PSIzMyIgcj0iMy4yIiBmaWxsPSIjM2I1MjQ5IiAvPgo8cGF0aCBkPSJNNDAgNDAgQzM2IDM2LCAzMyAzMCwgMzcgMjUgQzM5IDIyLCA0MyAyMiwgNDUgMjUgQzQ3IDMwLCA0NCAzNiwgNDAgNDAiIC8+CjxjaXJjbGUgY3g9IjQwIiBjeT0iMjMiIHI9IjIuOCIgZmlsbD0iIzNiNTI0OSIgLz4KPC9nPgo8dGV4dCB4PSI3MiIgeT0iNTYiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCBzZXJpZiIgZm9udC1zdHlsZT0iaXRhbGljIiBmb250LXdlaWdodD0iNjAwIiBmb250LXNpemU9IjM0IiBmaWxsPSIjM2I1MjQ5Ij5zZWNsdWRlPC90ZXh0Pgo8dGV4dCB4PSI3NCIgeT0iNzIiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI5IiBsZXR0ZXItc3BhY2luZz0iMiIgZmlsbD0iIzNiNTI0OSIgb3BhY2l0eT0iMC43NSI+SE9URUxTIEhPTUUgU1RZTEU8L3RleHQ+Cjwvc3ZnPg==";
+      const logoImg = new Image();
+      logoImg.src = svgDataUri;
+      await new Promise((resolve) => {
+        logoImg.onload = resolve;
+        logoImg.onerror = resolve;
+      });
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 640;
+        canvas.height = 180;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(logoImg, 0, 0, 640, 180);
+        return canvas.toDataURL("image/png");
+      }
+    } catch (_) {}
+    return null;
+  };
+
   useEffect(() => {
     if (!item?.id) return;
     supabase
@@ -376,7 +399,7 @@ export default function ItemDetailView({
         
         <div>
           <div style="text-align: center; margin-bottom: 25px;">
-            <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height: 56px; width: auto; display: block; margin: 0 auto 12px auto;" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 90" style="height:56px;width:auto;display:block;margin:0 auto 12px auto;"><g fill="none" stroke="#3b5249" stroke-width="3" stroke-linecap="round"><path d="M40 82 C40 65, 40 52, 40 40" /><path d="M40 52 C32 48, 26 41, 28 33 C30 27, 38 27, 40 33 C42 27, 50 27, 52 33 C54 41, 48 48, 40 52" /><circle cx="28" cy="33" r="3.2" fill="#3b5249" /><circle cx="52" cy="33" r="3.2" fill="#3b5249" /><path d="M40 40 C36 36, 33 30, 37 25 C39 22, 43 22, 45 25 C47 30, 44 36, 40 40" /><circle cx="40" cy="23" r="2.8" fill="#3b5249" /></g><text x="72" y="56" font-family="Georgia, serif" font-style="italic" font-weight="600" font-size="34" fill="#3b5249">seclude</text><text x="74" y="72" font-family="Arial, sans-serif" font-size="9" letter-spacing="2" fill="#3b5249" opacity="0.75">HOTELS HOME STYLE</text></svg>
             <div style="font-family: sans-serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #8c7b6c; font-weight: bold; margin-bottom: 6px;">
               S E C L U D E   H O T E L S   H E R I T A G E   A R C H I V E S
             </div>
@@ -588,24 +611,29 @@ export default function ItemDetailView({
     doc.line(14, 272, 25, 283); // Bottom-left
     doc.line(196, 272, 185, 283); // Bottom-right
 
-    // 4. Header Section
+    // 4. Header Section — Seclude logo
+    const certLogoUrl = await loadSecludeLogoForPdf();
+    if (certLogoUrl) {
+      try { doc.addImage(certLogoUrl, "PNG", 90, 16, 26, 13, undefined, "FAST"); } catch (_) {}
+    }
+
     doc.setFont("times", "normal");
     doc.setFontSize(10);
     doc.setTextColor(115, 99, 87);
-    doc.text("S E C L U D E   H O T E L S   H E R I T A G E   A R C H I V E S", 105, 22, { align: "center" });
+    doc.text("S E C L U D E   H O T E L S   H E R I T A G E   A R C H I V E S", 105, 36, { align: "center" });
 
     doc.setFont("times", "bold");
     doc.setFontSize(14);
     doc.setTextColor(26, 25, 23);
-    doc.text("SECLUDE HOTELS — UCHAGAON FORT", 105, 29, { align: "center" });
+    doc.text("SECLUDE HOTELS — UCHAGAON FORT", 105, 43, { align: "center" });
 
     doc.setFont("times", "normal");
     doc.setFontSize(9);
-    doc.text("REGISTRY AND CUSTODY LEDGER OF ROYAL ASSETS", 105, 34, { align: "center" });
+    doc.text("REGISTRY AND CUSTODY LEDGER OF HERITAGE ASSETS", 105, 48, { align: "center" });
 
     doc.setDrawColor(223, 214, 190);
     doc.setLineWidth(0.5);
-    doc.line(18, 38, 192, 38);
+    doc.line(18, 52, 192, 52);
 
     doc.setFont("times", "bolditalic");
     doc.setFontSize(16);
@@ -615,16 +643,6 @@ export default function ItemDetailView({
     doc.setFont("times", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(115, 99, 87);
-    // Add logo to PDF
-    try {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = "https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png";
-      await new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
-      if (img.complete && img.naturalWidth > 0) {
-        doc.addImage(img, "PNG", 80, 10, 50, 20);
-      }
-    } catch (_) {}
     doc.text(`Certificate ID: ${uniqueId}`, 105, 53, { align: "center" });
     doc.text(`Generated Date: ${timestampString}`, 105, 58, { align: "center" });
 
@@ -888,7 +906,7 @@ export default function ItemDetailView({
     const htmlContent = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; text-align: center; box-sizing: border-box; background: white; color: #140e0b; font-family: 'Lora', Georgia, serif; padding: 20px;">
         <div style="border: 3px double #dfb06c; padding: 40px; max-width: 440px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); background: white;">
-          <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height:40px;width:auto;display:block;margin:0 auto 8px auto;" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 90" style="height:40px;width:auto;display:block;margin:0 auto 8px auto;"><g fill="none" stroke="#3b5249" stroke-width="3" stroke-linecap="round"><path d="M40 82 C40 65, 40 52, 40 40" /><path d="M40 52 C32 48, 26 41, 28 33 C30 27, 38 27, 40 33 C42 27, 50 27, 52 33 C54 41, 48 48, 40 52" /><circle cx="28" cy="33" r="3.2" fill="#3b5249" /><circle cx="52" cy="33" r="3.2" fill="#3b5249" /><path d="M40 40 C36 36, 33 30, 37 25 C39 22, 43 22, 45 25 C47 30, 44 36, 40 40" /><circle cx="40" cy="23" r="2.8" fill="#3b5249" /></g><text x="72" y="56" font-family="Georgia, serif" font-style="italic" font-weight="600" font-size="34" fill="#3b5249">seclude</text><text x="74" y="72" font-family="Arial, sans-serif" font-size="9" letter-spacing="2" fill="#3b5249" opacity="0.75">HOTELS HOME STYLE</text></svg>
           <div style="font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8c7b6c; font-weight: bold; margin-bottom: 5px; font-family: sans-serif;">
             Heritage Exhibit Story
           </div>
@@ -935,30 +953,36 @@ export default function ItemDetailView({
       doc.setLineWidth(0.3);
       doc.rect(10, 10, 128, 190, "S");
 
+      // Seclude logo
+      const exhibitLogoUrl = await loadSecludeLogoForPdf();
+      if (exhibitLogoUrl) {
+        try { doc.addImage(exhibitLogoUrl, "PNG", 54, 14, 26, 13, undefined, "FAST"); } catch (_) {}
+      }
+
       // Title header
       doc.setFont("times", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(140, 123, 108);
-      doc.text("H E R I T A G E   E X H I B I T   S T O R Y", 74, 22, { align: "center" });
+      doc.text("H E R I T A G E   E X H I B I T   S T O R Y", 74, 32, { align: "center" });
 
       doc.setFont("times", "bold");
       doc.setFontSize(11);
       doc.setTextColor(20, 14, 11);
-      doc.text("SECLUDE HOTELS — UCHAGAON FORT", 74, 28, { align: "center" });
+      doc.text("SECLUDE HOTELS — UCHAGAON FORT", 74, 38, { align: "center" });
 
       doc.setDrawColor(236, 230, 218);
-      doc.line(20, 33, 128, 33);
+      doc.line(20, 43, 128, 43);
 
       // Artifact name
       doc.setFont("times", "bold");
       doc.setFontSize(15);
       doc.setTextColor(20, 14, 11);
       const textLines = doc.splitTextToSize(item.name || "Unnamed Artifact", 100);
-      doc.text(textLines, 74, 45, { align: "center" });
+      doc.text(textLines, 74, 55, { align: "center" });
 
       // Calculate vertical offset after name text
       const nameHeight = textLines.length * 6;
-      const metadataY = 45 + nameHeight + 2;
+      const metadataY = 55 + nameHeight + 2;
 
       // Metadata line
       doc.setFont("times", "normal");
@@ -1009,17 +1033,23 @@ export default function ItemDetailView({
       doc.setLineWidth(0.6);
       doc.rect(4, 4, 92, 52, "S");
 
+      // Seclude logo — small, top-left
+      const tagLogoUrl = await loadSecludeLogoForPdf();
+      if (tagLogoUrl) {
+        try { doc.addImage(tagLogoUrl, "PNG", 8, 6, 14, 7, undefined, "FAST"); } catch (_) {}
+      }
+
       // Left Column: Text Registry information
       doc.setFont("courier", "bold");
-      doc.setFontSize(7.5);
+      doc.setFontSize(6.5);
       doc.setTextColor(140, 123, 108);
-      doc.text("SECLUDE REGISTRY TAG", 8, 11);
+      doc.text("HERITAGE REGISTRY TAG", 8, 16);
 
       doc.setFont("times", "bold");
       doc.setFontSize(12);
       doc.setTextColor(28, 26, 24);
       const nameLines = doc.splitTextToSize(item.name || "Unnamed", 46);
-      doc.text(nameLines, 8, 17);
+      doc.text(nameLines, 8, 22);
 
       // Metadata information
       const metaY = 32;
@@ -1061,7 +1091,7 @@ export default function ItemDetailView({
     const htmlContent = `
       <div style="display: flex; align-items: center; justify-content: space-between; border: 2px dashed #3b5249; border-radius: 8px; padding: 16px; margin: 40px auto; max-width: 380px; background: white; color: black; font-family: sans-serif; box-sizing: border-box; gap: 16px;">
         <div style="flex: 1; text-align: left;">
-          <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude" style="height:20px;width:auto;margin-bottom:6px;display:block;" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 90" style="height:20px;width:auto;display:block;margin:0 auto 10px auto;"><g fill="none" stroke="#3b5249" stroke-width="3" stroke-linecap="round"><path d="M40 82 C40 65, 40 52, 40 40" /><path d="M40 52 C32 48, 26 41, 28 33 C30 27, 38 27, 40 33 C42 27, 50 27, 52 33 C54 41, 48 48, 40 52" /><circle cx="28" cy="33" r="3.2" fill="#3b5249" /><circle cx="52" cy="33" r="3.2" fill="#3b5249" /><path d="M40 40 C36 36, 33 30, 37 25 C39 22, 43 22, 45 25 C47 30, 44 36, 40 40" /><circle cx="40" cy="23" r="2.8" fill="#3b5249" /></g><text x="72" y="56" font-family="Georgia, serif" font-style="italic" font-weight="600" font-size="34" fill="#3b5249">seclude</text><text x="74" y="72" font-family="Arial, sans-serif" font-size="9" letter-spacing="2" fill="#3b5249" opacity="0.75">HOTELS HOME STYLE</text></svg>
           <span style="display: block; font-size: 8px; font-family: monospace; letter-spacing: 0.15em; color: #8c7b6c; font-weight: bold; text-transform: uppercase;">
             HERITAGE REGISTRY TAG
           </span>

@@ -14,6 +14,7 @@ import {
   ArrowRight, 
   Search 
 } from "lucide-react";
+import SecludeLogo from "./SecludeLogo";
 
 interface ReconciliationReportViewProps {
   artifacts: Artifact[];
@@ -579,6 +580,9 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
             
             {/* Stamp Stamp */}
             <div className="text-center space-y-1.5 py-4 border-b-2 border-double border-[#beb39e] relative">
+              <div className="flex justify-center mb-2">
+                <SecludeLogo className="text-[#3b5249]" style={{ height: "32px", width: "auto" }} />
+              </div>
               <span className="font-mono text-[9px] font-bold text-[#5c544d] uppercase tracking-widest block">
                 LEASING RECONCILIATION AUDIT COMPLIANCE REPORT
               </span>
@@ -586,8 +590,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
                 ESTATE OWNER RECONCILIATION DOSSIER
               </h3>
               <p className="text-[10px] font-mono text-[#6e645a] leading-relaxed uppercase">
-                AUDITED ON: {new Date().toISOString().split("T")[0]} &bull; <img src="https://seclude.in/wp-content/themes/seclude/images/seclude-logo.png" alt="Seclude Hotels" style="height:36px;width:auto;display:block;margin:0 auto 8px auto;" />
-                SECLUDE HOTELS — UCHAGAON FORT
+                AUDITED ON: {new Date().toISOString().split("T")[0]} &bull; SECLUDE HOTELS — UCHAGAON FORT
               </p>
             </div>
 
