@@ -517,7 +517,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
         <div className="space-y-6 animate-in fade-in duration-300">
           
           {/* Quick Metrics Cards */}
-          <div className="no-print grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="no-print grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {[
               { label: "All", count: stats.All, color: "border-[#dcd6c8] bg-white text-gray-800", filter: "All" },
               { label: "Matched", count: stats.Matched, color: "border-emerald-200 bg-emerald-50/40 text-emerald-950", filter: "Matched" },
@@ -526,7 +526,6 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
               { label: "Missing In Action", count: stats.Missing, color: "border-red-200 bg-red-50/40 text-red-950", filter: "Missing" },
               { label: "Added", count: stats.Added, color: "border-blue-200 bg-blue-50/40 text-blue-950", filter: "Added" }
             ].map((st, sIdx) => {
-              if (sIdx === 0 && window.innerWidth < 640) return null; // Skip "All" on tiny screen to fit
               return (
                 <button
                   key={st.label}

@@ -568,25 +568,61 @@ subscription.unsubscribe();
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#1c1a18] border-t border-[#2e2622] p-4 space-y-2">
+          <div className="md:hidden bg-[#1c1a18] border-t border-[#2e2622] p-4 space-y-2 max-h-[70vh] overflow-y-auto">
             {[
               { id: "dashboard", label: "Dashboard", icon: Compass },
               { id: "all", label: "All Artifacts", icon: Layers },
               { id: "location", label: "By Location", icon: MapPin },
-              { id: "qrhub", label: "QR Hub", icon: QrCode },
-            ].map(m => {
+              { id: "conservation", label: "Conservation Schedule", icon: CalendarDays },
+              { id: "qrhub", label: "QR Label Hub", icon: QrCode },
+              { id: "reconcile", label: "Lease Reconcile", icon: FileText },
+              { id: "team", label: "Team Activities", icon: Users },
+              { id: "admin", label: "Admin Panel", icon: Shield },
+            ].filter(m => {
+              if (m.id === "reconcile" || m.id === "team") {
+                return userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
+              }
+              if (m.id === "admin") {
+                return userRole === "SUPER_ADMIN";
+              }
+              return true;
+            }).map(m => {
               const Icon = m.icon;
               return (
-                <button key={m.id} onClick={() => navigateToView(m.id)}
-                  className={`w-full p-2 rounded text-left flex items-center gap-2 text-xs font-mono font-bold ${activeView === m.id ? "bg-[#3b5249] text-white" : "text-[#eae5d9] hover:bg-[#2e2622]"}`}>
-                  <Icon className="w-4 h-4" /> {m.label}
+                <button key={m.id} onClick={() => { navigateToView(m.id); setMobileMenuOpen(false); }}
+                  className={`w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold ${activeView === m.id ? "bg-[#3b5249] text-white" : "text-[#eae5d9] hover:bg-[#2e2622]"}`}>
+                  <Icon className="w-4 h-4 shrink-0" /> {m.label}
                 </button>
               );
             })}
-            <button onClick={handleSignOut}
-              className="w-full p-2 rounded text-left flex items-center gap-2 text-xs font-mono font-bold text-red-300 hover:bg-[#2e2622]">
-              <LogOut className="w-4 h-4" /> Sign Out
-            </button>
+
+            {!isOwnerView && (
+              <button onClick={() => { navigateToView("add"); setMobileMenuOpen(false); }}
+                className="w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold text-[#bfe0c0] hover:bg-[#2e2622] border-t border-[#2e2622] pt-3 mt-1">
+                <FileSpreadsheet className="w-4 h-4 shrink-0" /> Add New Artifact
+              </button>
+            )}
+
+            <div className="border-t border-[#2e2622] pt-2 mt-1 space-y-2">
+              <button onClick={() => { setIsEditProfileOpen(true); setMobileMenuOpen(false); }}
+                className="w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold text-[#eae5d9] hover:bg-[#2e2622]">
+                <UserIcon className="w-4 h-4 shrink-0" /> {currentUser.name} ({currentUser.role})
+              </button>
+              <button onClick={() => { setIsGlobalScannerOpen(true); setMobileMenuOpen(false); }}
+                className="w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold text-[#eae5d9] hover:bg-[#2e2622]">
+                <Camera className="w-4 h-4 shrink-0" /> Scan QR
+              </button>
+              {!isOwnerView && (
+                <button onClick={() => { handleDownloadFullCSV(); setMobileMenuOpen(false); }}
+                  className="w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold text-[#eae5d9] hover:bg-[#2e2622]">
+                  <Download className="w-4 h-4 shrink-0" /> Export CSV
+                </button>
+              )}
+              <button onClick={handleSignOut}
+                className="w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold text-red-300 hover:bg-[#2e2622]">
+                <LogOut className="w-4 h-4 shrink-0" /> Sign Out
+              </button>
+            </div>
           </div>
         )}
       </header>
