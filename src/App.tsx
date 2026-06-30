@@ -499,8 +499,8 @@ subscription.unsubscribe();
             </button>
             <div>
               <SecludeLogo
-                className="text-white"
-                style={{ height: "22px", width: "auto", opacity: "0.9", marginBottom: "2px", display: "block" }}
+                tone="light"
+                style={{ height: "22px", width: "auto", opacity: "0.95", marginBottom: "2px", display: "block" }}
               />
               <h1 className="font-serif text-[15px] font-bold tracking-tight text-white leading-none mt-0.5 flex flex-wrap items-center gap-2">
                 <span>SECLUDE INVENTORY MANAGER</span>

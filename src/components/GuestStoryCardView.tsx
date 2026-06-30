@@ -3,6 +3,7 @@ import { Artifact } from "../types";
 import { Compass, Sparkles, BookOpen } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { fetchAllArtifacts } from "../lib/db";
+import SecludeLogo from "./SecludeLogo";
 
 interface GuestStoryCardViewProps {
   itemId: string;
@@ -101,6 +102,11 @@ export default function GuestStoryCardView({ itemId }: GuestStoryCardViewProps) 
 
         {/* Story Text Metadata Block */}
         <div className="space-y-4 text-center">
+          {/* Seclude logo */}
+          <div className="flex justify-center pb-1">
+            <SecludeLogo tone="light" className="opacity-95" style={{ height: "32px", width: "auto" }} />
+          </div>
+
           {/* Artifact Name in Classic Serif Header */}
           <h2 className="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight text-[#dfb06c] leading-tight">
             {item.name}
