@@ -61,7 +61,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="mb-4 flex justify-center">
-            <SecludeLogo style={{ height: "64px", width: "auto", display: "block", margin: "0 auto" }} className="text-[#3b5249]" />
+            <SecludeLogo variant="full" style={{ height: "90px", width: "auto", display: "block", margin: "0 auto" }} />
           </div>
           <h1 className="font-serif text-xl font-bold text-[#1c1a18] tracking-tight">
             Heritage Registry

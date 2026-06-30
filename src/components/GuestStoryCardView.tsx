@@ -104,7 +104,7 @@ export default function GuestStoryCardView({ itemId }: GuestStoryCardViewProps) 
         <div className="space-y-4 text-center">
           {/* Seclude logo */}
           <div className="flex justify-center pb-1">
-            <SecludeLogo tone="light" className="opacity-95" style={{ height: "32px", width: "auto" }} />
+            <SecludeLogo variant="horizontal" tone="light" className="opacity-95" style={{ height: "36px", width: "auto" }} />
           </div>
 
           {/* Artifact Name in Classic Serif Header */}

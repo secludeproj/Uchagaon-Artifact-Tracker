@@ -581,7 +581,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
             {/* Stamp Stamp */}
             <div className="text-center space-y-1.5 py-4 border-b-2 border-double border-[#beb39e] relative">
               <div className="flex justify-center mb-2">
-                <SecludeLogo className="text-[#3b5249]" style={{ height: "32px", width: "auto" }} />
+                <SecludeLogo variant="horizontal" style={{ height: "40px", width: "auto" }} />
               </div>
               <span className="font-mono text-[9px] font-bold text-[#5c544d] uppercase tracking-widest block">
                 LEASING RECONCILIATION AUDIT COMPLIANCE REPORT
