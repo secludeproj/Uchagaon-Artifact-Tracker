@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Artifact, MovementLog } from "../types";
+import { REAL_ROOMS } from "../lib/locations";
 import { 
   Camera, 
   Sparkles, 
@@ -45,8 +46,8 @@ export default function AddEditFormView({
   const [dimensions, setDimensions] = useState(existingItem?.dimensions || "");
   const [condition, setCondition] = useState<Artifact["condition"]>(existingItem?.condition || "Good");
   const [estimatedValue, setEstimatedValue] = useState(existingItem?.estimatedValue || 1000);
-  const [originalLocation, setOriginalLocation] = useState(existingItem?.originalLocation || "Durbar Hall");
-  const [currentLocation, setCurrentLocation] = useState(existingItem?.currentLocation || "Lobby Reception");
+  const [originalLocation, setOriginalLocation] = useState(existingItem?.originalLocation || "Room 1");
+  const [currentLocation, setCurrentLocation] = useState(existingItem?.currentLocation || "Room 1");
   const [status, setStatus] = useState<Artifact["status"]>(existingItem?.status || "In Storage");
   const [handlingNotes, setHandlingNotes] = useState(existingItem?.handlingNotes || "");
   const [conservationNotes, setConservationNotes] = useState(existingItem?.conservationNotes || "");
@@ -59,14 +60,7 @@ export default function AddEditFormView({
     artifacts.forEach(a => {
       if (a.originalLocation) locs.add(a.originalLocation);
     });
-    // Add defaults
-    locs.add("Durbar Hall");
-    locs.add("Palace North Armory");
-    locs.add("Zenana Dining Salon");
-    locs.add("Queens Courtyard Garden");
-    locs.add("Badi Mahal Corridor");
-    locs.add("Mor Chowk Courtyard");
-    locs.add("Sheesh Mahal");
+    REAL_ROOMS.forEach(r => locs.add(r));
     return Array.from(locs);
   }, [artifacts]);
 
@@ -75,14 +69,7 @@ export default function AddEditFormView({
     artifacts.forEach(a => {
       if (a.currentLocation) locs.add(a.currentLocation);
     });
-    // Add defaults
-    locs.add("Lobby Reception");
-    locs.add("Hotel Lobby display-1");
-    locs.add("Suite Room 102 Lounge");
-    locs.add("Palace Storage Chamber B");
-    locs.add("Palace Conservation Laboratory");
-    locs.add("Moti Mahal Reception Room");
-    locs.add("Zenana Courtyard");
+    REAL_ROOMS.forEach(r => locs.add(r));
     return Array.from(locs);
   }, [artifacts]);
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Artifact, MovementLog } from "../types";
 import { supabase } from "../lib/supabase";
+import { REAL_ROOMS } from "../lib/locations";
 import QRGenerator from "./QRGenerator";
 import ConservationTimelineView from "./ConservationTimelineView";
 import { jsPDF } from "jspdf";
@@ -156,16 +157,8 @@ export default function ItemDetailView({
   // Locations list derived from all artifacts and standard defaults
   const currentLocationsList = React.useMemo(() => {
     const locs = new Set<string>();
-    // Prepopulated standard defaults
-    locs.add("Main Lobby Display Panel A");
-    locs.add("Durbar Hall East Wall");
-    locs.add("Durbar Hall West Wall");
-    locs.add("Palace Conservation Laboratory");
-    locs.add("North Gallery Walkway");
-    locs.add("Lobby Lounge Area B");
-    locs.add("Zen Garden Pavillion");
-    locs.add("West Wing Vault");
-    
+    REAL_ROOMS.forEach(r => locs.add(r));
+
     if (artifacts && Array.isArray(artifacts)) {
       artifacts.forEach((a) => {
         if (a.currentLocation) locs.add(a.currentLocation);
