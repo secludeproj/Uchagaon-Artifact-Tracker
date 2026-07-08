@@ -25,10 +25,12 @@ interface DashboardViewProps {
   currentUser: { name: string; email: string; role: string };
   onNavigate: (view: string, targetId?: string) => void;
   onScanClick: () => void;
-  onSeedData?: () => void;
 }
 
-export default function DashboardView({ artifacts, currentUser, onNavigate, onScanClick, onSeedData }: DashboardViewProps) {
+export default function DashboardView({ artifacts, currentUser, onNavigate, onScanClick }: DashboardViewProps) {
+  const userRole = currentUser?.role?.trim()?.toUpperCase() || "";
+  const isAdminRole = userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
+
   // Calculations
   const totalCount = artifacts.length;
   
@@ -145,14 +147,6 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
           >
             Launch QR Scanner
           </button>
-          {artifacts.length === 0 && onSeedData && (
-            <button
-              onClick={onSeedData}
-              className="p-2 px-4 bg-amber-700 hover:bg-amber-800 text-white font-mono text-[10px] font-bold uppercase tracking-wider rounded border border-amber-600 shadow hover:shadow-md transition-all cursor-pointer active:scale-95 text-center"
-            >
-              ✦ Load Sample Artifacts
-            </button>
-          )}
         </div>
       </div>
 
@@ -184,28 +178,28 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
 
         {/* Insurance Valuation */}
         <div 
-          onClick={(currentUser?.role?.trim()?.toUpperCase() === "ADMIN") ? () => onNavigate("reconcile") : undefined}
+          onClick={isAdminRole ? () => onNavigate("reconcile") : undefined}
           className={`bg-[#fdfcf7] border border-[#dcd6c8] p-5 rounded-lg shadow-sm relative overflow-hidden flex flex-col justify-between ${
-            (currentUser?.role?.trim()?.toUpperCase() === "ADMIN") 
+            isAdminRole 
               ? "cursor-pointer hover:border-[#5a2c82] hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group" 
               : "cursor-default"
           }`}
         >
           <div className="flex items-center justify-between">
             <span className={`font-mono text-[10px] uppercase font-bold tracking-wider ${
-              (currentUser?.role?.trim()?.toUpperCase() === "ADMIN") ? "text-[#6e645a] group-hover:text-[#5a2c82] transition-colors" : "text-[#6e645a]"
+              isAdminRole ? "text-[#6e645a] group-hover:text-[#5a2c82] transition-colors" : "text-[#6e645a]"
             }`}>
               Insurance Protection
             </span>
             <div className={`p-2 rounded bg-[#f3edf8]/80 text-[#5a2c82] border border-[#d6cce2] ${
-              (currentUser?.role?.trim()?.toUpperCase() === "ADMIN") ? "group-hover:bg-[#5a2c82] group-hover:text-white transition-all" : ""
+              isAdminRole ? "group-hover:bg-[#5a2c82] group-hover:text-white transition-all" : ""
             }`}>
               <Coins className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
             <h3 className={`font-serif text-3xl font-extrabold text-[#111110] ${
-              (currentUser?.role?.trim()?.toUpperCase() === "ADMIN") ? "group-hover:text-[#5a2c82] transition-colors" : ""
+              isAdminRole ? "group-hover:text-[#5a2c82] transition-colors" : ""
             }`}>
               ₹ {totalValue.toLocaleString()}
             </h3>
@@ -213,7 +207,7 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
               Collection replacement cost cover
             </p>
           </div>
-          {(currentUser?.role?.trim()?.toUpperCase() === "ADMIN") && (
+          {isAdminRole && (
             <span className="text-[9px] font-mono text-[#5a2c82] mt-2 opacity-0 group-hover:opacity-100 transition-all">
               View Value protection dossier →
             </span>
@@ -586,7 +580,7 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
           <Activity className="w-4 h-4 text-[#3b5249]" />
           <span>REALTIME BACKEND ACTIVE: Live registry synchronized for all connected staff</span>
         </div>
-        {(currentUser?.role?.trim()?.toUpperCase() === "ADMIN") && (
+        {isAdminRole && (
           <button 
             onClick={() => onNavigate("team")}
             className="underline hover:text-[#1c1a18] font-bold cursor-pointer"

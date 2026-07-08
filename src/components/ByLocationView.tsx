@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Artifact } from "../types";
 import { MapPin, ArrowRight, Layers, Eye } from "lucide-react";
+import { REAL_ROOMS } from "../lib/locations";
 
 interface ByLocationViewProps {
   artifacts: Artifact[];
@@ -8,10 +9,17 @@ interface ByLocationViewProps {
 }
 
 export default function ByLocationView({ artifacts, onNavigate }: ByLocationViewProps) {
-  // Grouping items by their dynamic currentLocation attribute
+  // Grouping items by their dynamic currentLocation attribute.
+  // Seeded with every real room first (even ones with 0 items currently),
+  // so the property's full layout is always visible, not just rooms that
+  // happen to already have an artifact assigned.
   const groupedLocations = useMemo(() => {
     const groups: Record<string, Artifact[]> = {};
-    
+
+    REAL_ROOMS.forEach((room) => {
+      groups[room] = [];
+    });
+
     artifacts.forEach((item) => {
       const loc = item.currentLocation || "Unassigned Reception Room";
       if (!groups[loc]) {
@@ -68,16 +76,22 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
                   </div>
 
                   <div className="flex items-center gap-4 text-[11px] font-mono text-[#5c544d] self-end sm:self-auto">
-                    <span>
-                      Original return match rate:{" "}
-                      <span className="font-bold text-[#3b5249]">
-                        {items.filter((i) => i.currentLocation === i.originalLocation).length} / {items.length} matched
-                      </span>
-                    </span>
-                    <span className="h-4 w-px bg-[#c4bcae]"></span>
-                    <span>
-                      Est value: <span className="font-bold text-[#1c1a18]">₹ {sumValue.toLocaleString()}</span>
-                    </span>
+                    {items.length > 0 ? (
+                      <>
+                        <span>
+                          Original return match rate:{" "}
+                          <span className="font-bold text-[#3b5249]">
+                            {items.filter((i) => i.currentLocation === i.originalLocation).length} / {items.length} matched
+                          </span>
+                        </span>
+                        <span className="h-4 w-px bg-[#c4bcae]"></span>
+                        <span>
+                          Est value: <span className="font-bold text-[#1c1a18]">₹ {sumValue.toLocaleString()}</span>
+                        </span>
+                      </>
+                    ) : (
+                      <span className="italic text-[#8e847a]">No items assigned to this space yet</span>
+                    )}
                   </div>
                 </div>
 

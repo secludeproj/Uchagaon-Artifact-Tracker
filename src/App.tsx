@@ -17,7 +17,6 @@ import {
   fetchProfile,
   bulkInsertArtifacts,
 } from "./lib/db";
-import { seedTestData } from "./lib/seedData";
 
 // Components
 import LoginView from "./components/LoginView";
@@ -295,13 +294,14 @@ subscription.unsubscribe();
       if (isEdit) {
         await updateArtifact(selectedItemId!, payload, user);
         await logActivity("edit", payload.name, selectedItemId!, `Updated artifact details`, { id: currentUser.id, ...user });
+        await loadAllData();
         navigateToView("item-detail", selectedItemId!);
       } else {
         const saved = await insertArtifact(payload, user);
         await logActivity("add", saved.name, saved.id, `Added new artifact to registry`, { id: currentUser.id, ...user });
+        await loadAllData();
         navigateToView("item-detail", saved.id);
       }
-      await loadAllData();
     } catch (err: any) {
       console.error("Save error:", err);
       alert("Error saving artifact: " + err.message);
@@ -710,12 +710,7 @@ subscription.unsubscribe();
             {activeView === "dashboard" && (
               <DashboardView artifacts={artifacts} currentUser={currentUser}
                 onNavigate={navigateToView}
-                onScanClick={() => setIsGlobalScannerOpen(true)}
-                onSeedData={async () => {
-                  const result = await seedTestData();
-                  if (result.success) await loadAllData();
-                  else alert("Seed failed: " + result.error?.message);
-                }} />
+                onScanClick={() => setIsGlobalScannerOpen(true)} />
             )}
             {activeView === "all" && (
               <AllArtifactsView artifacts={artifacts} activeFilter={filteredStateMode} onNavigate={navigateToView} />

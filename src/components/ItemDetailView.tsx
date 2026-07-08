@@ -54,9 +54,9 @@ export default function ItemDetailView({
   const item = artifacts.find((a) => a.id === itemId);
 
   const userRole = currentUser?.role?.trim()?.toUpperCase() || "";
-  const isAdmin = userRole === "ADMIN";
+  const isAdmin = userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
   const isStaff = userRole === "STAFF";
-  const isOwnerView = userRole === "OWNER VIEW" || userRole === "OWNER" || userRole === "READ-ONLY" || userRole === "READ ONLY";
+  const isOwnerView = (userRole === "OWNER VIEW" || userRole === "OWNER" || userRole === "READ-ONLY" || userRole === "READ ONLY") && userRole !== "SUPER_ADMIN";
 
   const canMove = isAdmin || isStaff;
   const canEdit = isAdmin || isStaff;
