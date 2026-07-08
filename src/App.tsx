@@ -81,6 +81,11 @@ export default function App() {
 
   // ── Auth: Listen to Supabase session ───────────────────────────────────────
 
+  // Tracks which user's data is already loaded, so a tab-refocus session
+  // revalidation (which fires SIGNED_IN again for the SAME user) doesn't
+  // trigger a full reload every time you switch back to this tab.
+  const loadedUserIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -96,6 +101,11 @@ export default function App() {
     // Listen for auth changes (OAuth redirect back)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
+        if (loadedUserIdRef.current === session.user.id) {
+          // Same user already loaded — this is just a tab-refocus session
+          // revalidation, not a real new login. Skip the reload entirely.
+          return;
+        }
         await handleUserSession(session.user.id, session.user.email || "", session.user.user_metadata?.full_name || "");
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         // Silent token refresh — don't reload data, just update session
@@ -107,6 +117,7 @@ export default function App() {
         setArtifacts([]);
         setStaff([]);
         setActivity([]);
+        loadedUserIdRef.current = null;
         setIsAuthLoading(false);
       }
     });
@@ -138,6 +149,7 @@ subscription.unsubscribe();
         avatarUrl: profile.avatar_url || undefined,
       };
       setCurrentUser(user);
+      loadedUserIdRef.current = userId;
       // Store only as a convenience cache — will be overridden on next login
       localStorage.setItem("seclude_operator", JSON.stringify(user));
       setShowProfileSetup(false);

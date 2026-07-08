@@ -85,23 +85,18 @@ export function artifactToDb(artifact: Partial<Artifact>): Partial<DbArtifact> {
 // ── Artifact Queries ──────────────────────────────────────────────────────────
 
 export async function fetchAllArtifacts(): Promise<Artifact[]> {
-  const { data: artifacts, error } = await supabase
-    .from('artifacts')
-    .select('*')
-    .order('added_date', { ascending: false });
+  const [artifactsRes, movementsRes, inspectionsRes] = await Promise.all([
+    supabase.from('artifacts').select('*').order('added_date', { ascending: false }),
+    supabase.from('movement_logs').select('*').order('date', { ascending: false }),
+    supabase.from('inspection_logs').select('*').order('date', { ascending: false }),
+  ]);
 
-  if (error) throw error;
+  if (artifactsRes.error) throw artifactsRes.error;
+  const artifacts = artifactsRes.data;
   if (!artifacts) return [];
 
-  const { data: movements } = await supabase
-    .from('movement_logs')
-    .select('*')
-    .order('date', { ascending: false });
-
-  const { data: inspections } = await supabase
-    .from('inspection_logs')
-    .select('*')
-    .order('date', { ascending: false });
+  const movements = movementsRes.data;
+  const inspections = inspectionsRes.data;
 
   return artifacts.map(a =>
     dbToArtifact(
