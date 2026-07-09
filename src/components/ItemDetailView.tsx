@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Artifact, MovementLog } from "../types";
 import { supabase } from "../lib/supabase";
-import { REAL_ROOMS } from "../lib/locations";
+import { REAL_ROOMS, ROOMS_BY_BLOCK, blockForLocation } from "../lib/locations";
 import QRGenerator from "./QRGenerator";
 import ConservationTimelineView from "./ConservationTimelineView";
 import { jsPDF } from "jspdf";
@@ -169,6 +169,23 @@ export default function ItemDetailView({
 
   const [isCustomLocation, setIsCustomLocation] = useState(false);
   const [customLocationText, setCustomLocationText] = useState("");
+
+  // Groups a flat location list into [blockName, rooms[]] pairs, in physical
+  // property order, with anything not matching a known real room grouped last.
+  const groupLocationsByBlock = (locs: string[]): [string, string[]][] => {
+    const groups: Record<string, string[]> = {};
+    locs.forEach((loc) => {
+      const block = blockForLocation(loc);
+      if (!groups[block]) groups[block] = [];
+      groups[block].push(loc);
+    });
+    const blockOrder = Object.keys(ROOMS_BY_BLOCK);
+    const orderedKeys = [
+      ...blockOrder.filter((b) => groups[b]),
+      ...Object.keys(groups).filter((b) => !blockOrder.includes(b)),
+    ];
+    return orderedKeys.map((block) => [block, groups[block]]);
+  };
 
   // Sync form states when item changes or modal opens
   React.useEffect(() => {
@@ -1815,10 +1832,14 @@ export default function ItemDetailView({
                       }}
                       className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249] font-sans"
                     >
-                      {currentLocationsList.map((loc) => (
-                        <option key={loc} value={loc}>
-                          {loc}
-                        </option>
+                      {groupLocationsByBlock(currentLocationsList).map(([block, rooms]) => (
+                        <optgroup key={block} label={block}>
+                          {rooms.map((loc) => (
+                            <option key={loc} value={loc}>
+                              {loc}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                       <option value="__CUSTOM__">✍️ Custom / Enter New Location...</option>
                     </select>

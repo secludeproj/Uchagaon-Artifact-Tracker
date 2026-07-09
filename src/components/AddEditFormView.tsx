@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Artifact, MovementLog } from "../types";
-import { REAL_ROOMS } from "../lib/locations";
+import { REAL_ROOMS, ROOMS_BY_BLOCK, blockForLocation } from "../lib/locations";
 import { 
   Camera, 
   Sparkles, 
@@ -98,6 +98,24 @@ export default function AddEditFormView({
   const [complianceAgree, setComplianceAgree] = useState(false);
 
   // Selector handlers
+  // Groups a flat location list into [blockName, rooms[]] pairs, in physical
+  // property order (Block A, then B, then C), with anything not matching a
+  // known real room (e.g. a custom-typed location) grouped last.
+  const groupLocationsByBlock = (locs: string[]): [string, string[]][] => {
+    const groups: Record<string, string[]> = {};
+    locs.forEach((loc) => {
+      const block = blockForLocation(loc);
+      if (!groups[block]) groups[block] = [];
+      groups[block].push(loc);
+    });
+    const blockOrder = Object.keys(ROOMS_BY_BLOCK);
+    const orderedKeys = [
+      ...blockOrder.filter((b) => groups[b]),
+      ...Object.keys(groups).filter((b) => !blockOrder.includes(b)),
+    ];
+    return orderedKeys.map((block) => [block, groups[block]]);
+  };
+
   const handleOriginalSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     if (val === "__CUSTOM__") {
@@ -936,10 +954,14 @@ export default function AddEditFormView({
                   onChange={handleOriginalSelectChange}
                   className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249] font-sans font-bold text-red-700"
                 >
-                  {originalLocationsList.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
+                  {groupLocationsByBlock(originalLocationsList).map(([block, rooms]) => (
+                    <optgroup key={block} label={block}>
+                      {rooms.map((loc) => (
+                        <option key={loc} value={loc}>
+                          {loc}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                   <option value="__CUSTOM__">✍️ Custom/New Location...</option>
                 </select>
@@ -967,10 +989,14 @@ export default function AddEditFormView({
                   onChange={handleCurrentSelectChange}
                   className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249] font-sans font-bold text-emerald-800"
                 >
-                  {currentLocationsList.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
+                  {groupLocationsByBlock(currentLocationsList).map(([block, rooms]) => (
+                    <optgroup key={block} label={block}>
+                      {rooms.map((loc) => (
+                        <option key={loc} value={loc}>
+                          {loc}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                   <option value="__CUSTOM__">✍️ Custom/New Location...</option>
                 </select>

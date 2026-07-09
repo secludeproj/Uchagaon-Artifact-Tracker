@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Artifact } from "../types";
 import { MapPin, ArrowRight, Layers, Eye } from "lucide-react";
-import { REAL_ROOMS } from "../lib/locations";
+import { REAL_ROOMS, blockForLocation } from "../lib/locations";
 
 interface ByLocationViewProps {
   artifacts: Artifact[];
@@ -31,7 +31,16 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
     return groups;
   }, [artifacts]);
 
-  const locationKeys = Object.keys(groupedLocations).sort();
+  // Sort in physical property order (Block A rooms, then B, then C, in the
+  // same order they appear at the property), with any custom/unrecognized
+  // location names grouped at the end, alphabetically among themselves.
+  const roomOrderIndex = new Map(REAL_ROOMS.map((room, i) => [room, i]));
+  const locationKeys = Object.keys(groupedLocations).sort((a, b) => {
+    const ai = roomOrderIndex.has(a) ? roomOrderIndex.get(a)! : Infinity;
+    const bi = roomOrderIndex.has(b) ? roomOrderIndex.get(b)! : Infinity;
+    if (ai !== bi) return ai - bi;
+    return a.localeCompare(b);
+  });
 
   return (
     <div className="space-y-6">
@@ -52,15 +61,27 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
         </div>
       ) : (
         <div className="space-y-6">
-          {locationKeys.map((location) => {
-            const items = groupedLocations[location];
-            const sumValue = items.reduce((sum, i) => sum + i.estimatedValue, 0);
+          {(() => {
+            let lastBlock = "";
+            return locationKeys.map((location) => {
+              const items = groupedLocations[location];
+              const sumValue = items.reduce((sum, i) => sum + i.estimatedValue, 0);
+              const thisBlock = blockForLocation(location);
+              const showBlockHeader = thisBlock !== lastBlock;
+              lastBlock = thisBlock;
 
-            return (
-              <div 
-                key={location} 
-                className="bg-[#fdfcf7] border border-[#dcd6c8] rounded shadow-sm overflow-hidden"
-              >
+              return (
+                <React.Fragment key={location}>
+                  {showBlockHeader && (
+                    <div className="pt-2 first:pt-0">
+                      <h3 className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#3b5249] border-b-2 border-[#3b5249] pb-1 inline-block">
+                        {thisBlock}
+                      </h3>
+                    </div>
+                  )}
+                  <div
+                    className="bg-[#fdfcf7] border border-[#dcd6c8] rounded shadow-sm overflow-hidden"
+                  >
                 {/* Section Header */}
                 <div className="bg-[#f7f5f0] border-b border-[#ece6da] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2">
@@ -146,8 +167,10 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
                   })}
                 </div>
               </div>
-            );
-          })}
+                </React.Fragment>
+              );
+            });
+          })()}
         </div>
       )}
     </div>

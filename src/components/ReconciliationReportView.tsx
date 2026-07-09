@@ -271,42 +271,6 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
     }
   };
 
-  // Generate a matching dynamic demo CSV derived from the active repository
-  const handleLoadDemoCSV = () => {
-    let mockContent = "ID,Name,Original Location,Original Condition,Category,Estimated Value\n";
-    
-    if (artifacts.length > 0) {
-      artifacts.forEach((item, idx) => {
-        let location = item.originalLocation;
-        let condition = item.condition;
-
-        // Introduce simulated deltas
-        if (idx === 0) {
-          // Relocated item
-          location = "Demonstrated Alternate Lobby Suite";
-        } else if (idx === 1) {
-          // Condition changed item
-          condition = item.condition === "Mint" ? "Poor" : "Mint";
-        }
-
-        mockContent += `"${item.id}","${item.name}","${location}","${condition}","${item.category}","${item.estimatedValue}"\n`;
-      });
-    } else {
-      mockContent += `"HR-001","Grand Royal Marble Fountain","Palace Courtyard","Mint","Sculptures","85000"\n`;
-      mockContent += `"HR-002","Gilded Peacock Throne Miniature","Main Durbar Lobby","Good","Metalwork","42050"\n`;
-    }
-
-    // Append a "Missing" item
-    mockContent += `"HR-999","Sovereign Emerald Dagger of Mewar","Courtyard Inner Vault","Mint","Arms & Regalia","280000"\n`;
-
-    try {
-      const rows = parseCSV(mockContent);
-      runReconciliation(rows);
-    } catch (err) {
-      alert("Failed to generate demo database comparison.");
-    }
-  };
-
   const downloadTemplateCsv = () => {
     let csvString = "ID,Name,Original Location,Original Condition,Category,Estimated Value\n";
     if (artifacts.length > 0) {
@@ -314,7 +278,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
         csvString += `"${item.id}","${item.name}","${item.originalLocation}","${item.condition}","${item.category}","${item.estimatedValue}"\n`;
       });
     } else {
-      csvString += `"HR-001","Sample Item Name","Palace Hall","Mint","Sculptures","15000"\n`;
+      csvString += `"HR-001","Sample Item Name","Room 1","Mint","Sculptures","15000"\n`;
     }
     
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
@@ -470,14 +434,6 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
                   >
                     Select CSV File
                   </label>
-                  
-                  <button
-                    type="button"
-                    onClick={handleLoadDemoCSV}
-                    className="p-2 px-4 bg-white border border-[#3b5249] text-[#3b5249] hover:bg-emerald-50/30 text-xs font-mono font-bold uppercase rounded-md transition-all cursor-pointer"
-                  >
-                    ✨ Run Demo Reconciliation
-                  </button>
                 </div>
               </div>
             </div>
