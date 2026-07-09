@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Artifact, MovementLog } from "../types";
 import { REAL_ROOMS, ROOMS_BY_BLOCK, blockForLocation } from "../lib/locations";
+import { buildCategoryList } from "../lib/categories";
 import { 
   Camera, 
   Sparkles, 
@@ -76,9 +77,11 @@ export default function AddEditFormView({
   // Track if custom option is triggered
   const [isCustomOriginal, setIsCustomOriginal] = useState(false);
   const [isCustomCurrent, setIsCustomCurrent] = useState(false);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
 
   const [customOriginalVal, setCustomOriginalVal] = useState("");
   const [customCurrentVal, setCustomCurrentVal] = useState("");
+  const [customCategoryVal, setCustomCategoryVal] = useState("");
 
   // Initialize custom states when editing existing item
   React.useEffect(() => {
@@ -148,6 +151,27 @@ export default function AddEditFormView({
     const val = e.target.value;
     setCustomCurrentVal(val);
     setCurrentLocation(val);
+  };
+
+  const categoriesList = React.useMemo(() => {
+    return buildCategoryList(artifacts.map((a) => a.category));
+  }, [artifacts]);
+
+  const handleCategorySelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === "__CUSTOM__") {
+      setIsCustomCategory(true);
+      setCategory((customCategoryVal || "") as any);
+    } else {
+      setIsCustomCategory(false);
+      setCategory(val as any);
+    }
+  };
+
+  const handleCustomCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setCustomCategoryVal(val);
+    setCategory(val as any);
   };
 
   // AI State
@@ -793,24 +817,30 @@ export default function AddEditFormView({
               {/* Category selector */}
               <div>
                 <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#5c544d] mb-1">
-                  Heritage Class Class Category
+                  Heritage Class Category
                 </label>
                 <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as any)}
+                  value={isCustomCategory ? "__CUSTOM__" : category}
+                  onChange={handleCategorySelectChange}
                   className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none"
                 >
-                  <option value="Weaponry & Armor">Weaponry & Armor</option>
-                  <option value="Artwork & Paintings">Artwork & Paintings</option>
-                  <option value="Furniture">Furniture</option>
-                  <option value="Textiles & Carpets">Textiles & Carpets</option>
-                  <option value="Ceramics & Pottery">Ceramics & Pottery</option>
-                  <option value="Metalwork">Metalwork</option>
-                  <option value="Religious & Ceremonial">Religious & Ceremonial</option>
-                  <option value="Manuscripts & Books">Manuscripts & Books</option>
-                  <option value="Jewelry & Ornaments">Jewelry & Ornaments</option>
-                  <option value="Other">Other</option>
+                  {categoriesList.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__CUSTOM__">✍️ Custom / Add New Category...</option>
                 </select>
+                {isCustomCategory && (
+                  <input
+                    type="text"
+                    required
+                    value={customCategoryVal}
+                    onChange={handleCustomCategoryChange}
+                    placeholder="Type new category name..."
+                    className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249] font-sans mt-1"
+                  />
+                )}
               </div>
 
               {/* Age */}

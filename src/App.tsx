@@ -3,6 +3,7 @@ import { Artifact, Staff, TeamActivity } from "./types";
 
 // Supabase
 import { supabase } from "./lib/supabase";
+import { exportPhotoAlbumsByRoom } from "./lib/photoExport";
 import {
   fetchAllArtifacts,
   insertArtifact,
@@ -417,6 +418,37 @@ subscription.unsubscribe();
     }
   };
 
+  // ── Photo Album Export (per-room, captioned) ────────────────────────────────
+
+  const [photoExportProgress, setPhotoExportProgress] = useState<{ done: number; total: number } | null>(null);
+
+  const handleExportPhotoAlbums = async () => {
+    if (artifacts.length === 0) return;
+    try {
+      setPhotoExportProgress({ done: 0, total: 1 });
+      const result = await exportPhotoAlbumsByRoom(artifacts, (done, total) => {
+        setPhotoExportProgress({ done, total: total || 1 });
+      });
+      const url = URL.createObjectURL(result.zipBlob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "SECLUDE_HERITAGE_PHOTO_ALBUMS_BY_ROOM.zip");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      if (result.skippedCount > 0) {
+        alert(
+          `Photo album exported: ${result.exportedCount} photo(s) included, ${result.skippedCount} skipped.\n\nSee manifest.txt inside the zip for exactly which items/photos were skipped and why (most commonly a Drive folder link rather than a direct photo).`
+        );
+      }
+    } catch (err: any) {
+      alert("Photo export error: " + err.message);
+    } finally {
+      setPhotoExportProgress(null);
+    }
+  };
+
   // ── CSV Export ─────────────────────────────────────────────────────────────
 
   const handleDownloadFullCSV = () => {
@@ -566,6 +598,15 @@ subscription.unsubscribe();
                 <Download className="w-3.5 h-3.5" /> Export CSV
               </button>
             )}
+            {!isOwnerView && (
+              <button onClick={handleExportPhotoAlbums} disabled={!!photoExportProgress}
+                className="text-xs font-mono font-bold border border-[#eae2d0] text-[#eae2d0] hover:bg-[#eae2d0] hover:text-[#1c1a18] py-1.5 px-3 rounded flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait">
+                <Download className="w-3.5 h-3.5" />
+                {photoExportProgress
+                  ? `Exporting ${photoExportProgress.done}/${photoExportProgress.total}...`
+                  : "Export Photo Albums"}
+              </button>
+            )}
             <button onClick={handleSignOut}
               className="text-xs font-mono font-bold bg-red-950 border border-red-900 text-red-100 hover:bg-red-900 py-1.5 px-2.5 rounded flex items-center gap-1 transition-all cursor-pointer">
               <LogOut className="w-3.5 h-3.5" /> Sign Out
@@ -628,6 +669,12 @@ subscription.unsubscribe();
                 <button onClick={() => { handleDownloadFullCSV(); setMobileMenuOpen(false); }}
                   className="w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold text-[#eae5d9] hover:bg-[#2e2622]">
                   <Download className="w-4 h-4 shrink-0" /> Export CSV
+                </button>
+              )}
+              {!isOwnerView && (
+                <button onClick={() => { handleExportPhotoAlbums(); setMobileMenuOpen(false); }} disabled={!!photoExportProgress}
+                  className="w-full p-2.5 rounded text-left flex items-center gap-2.5 text-xs font-mono font-bold text-[#eae5d9] hover:bg-[#2e2622] disabled:opacity-50">
+                  <Download className="w-4 h-4 shrink-0" /> Export Photo Albums
                 </button>
               )}
               <button onClick={handleSignOut}

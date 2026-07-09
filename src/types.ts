@@ -13,17 +13,7 @@ export interface Artifact {
   id: string;
   qrCode: string; // Auto-generated string representing the QR / barcode
   name: string;
-  category: 
-    | 'Weaponry & Armor'
-    | 'Artwork & Paintings'
-    | 'Furniture'
-    | 'Textiles & Carpets'
-    | 'Ceramics & Pottery'
-    | 'Metalwork'
-    | 'Religious & Ceremonial'
-    | 'Manuscripts & Books'
-    | 'Jewelry & Ornaments'
-    | 'Other';
+  category: string; // one of the base heritage categories, or a custom category added by a user
   description: string;
   estimatedAge: string;
   material: string;

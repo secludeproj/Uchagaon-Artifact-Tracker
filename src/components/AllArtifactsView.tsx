@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Artifact } from "../types";
 import { Search, SlidersHorizontal, ArrowLeft, ArrowRight, ShieldAlert, Coins, Eye, Camera, Sparkles, Loader2, Play } from "lucide-react";
 import QRScannerModal from "./QRScannerModal";
+import { buildCategoryList } from "../lib/categories";
 
 interface AllArtifactsViewProps {
   artifacts: Artifact[];
@@ -120,20 +121,10 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
 
   const itemsPerPage = 8;
 
-  // Static Categories matching schema
-  const categories = [
-    "All",
-    "Weaponry & Armor",
-    "Artwork & Paintings",
-    "Furniture",
-    "Textiles & Carpets",
-    "Ceramics & Pottery",
-    "Metalwork",
-    "Religious & Ceremonial",
-    "Manuscripts & Books",
-    "Jewelry & Ornaments",
-    "Other"
-  ];
+  // Categories: base heritage categories plus any custom ones already in use
+  const categories = useMemo(() => {
+    return ["All", ...buildCategoryList(artifacts.map((a) => a.category))];
+  }, [artifacts]);
 
   // Static Statuses
   const statuses = ["All", "On Display", "In Storage", "Under Maintenance", "Damaged", "Reserved"];
