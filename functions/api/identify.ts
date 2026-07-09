@@ -22,12 +22,13 @@ Return a JSON object with these exact fields:
   "estimatedAge": "estimated age/period",
   "material": "materials used",
   "condition": "one of: Mint, Good, Fair, Poor, Damaged",
+  "estimatedValue": "a rough, conservative numeric estimate in Indian Rupees (INR) of this item's value, as a plain number with no currency symbol or commas — this is a starting-point guess only, not an appraisal",
   "handlingNotes": "conservation handling instructions",
   "conservationNotes": "conservation assessment",
   "story": "cultural/historical story about this artifact"
 }`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -45,6 +45,7 @@ export default function AddEditFormView({
   const [dimensions, setDimensions] = useState(existingItem?.dimensions || "");
   const [condition, setCondition] = useState<Artifact["condition"]>(existingItem?.condition || "Good");
   const [estimatedValue, setEstimatedValue] = useState(existingItem?.estimatedValue || 1000);
+  const [valueNeedsReview, setValueNeedsReview] = useState(false);
   const [originalLocation, setOriginalLocation] = useState(existingItem?.originalLocation || "Room 1");
   const [currentLocation, setCurrentLocation] = useState(existingItem?.currentLocation || "Room 1");
   const [status, setStatus] = useState<Artifact["status"]>(existingItem?.status || "In Storage");
@@ -384,6 +385,13 @@ export default function AddEditFormView({
       setDescription(data.description || description);
       setHandlingNotes(data.handlingNotes || handlingNotes);
       if (data.condition) setCondition(data.condition);
+      if (data.estimatedValue) {
+        const parsedValue = Number(data.estimatedValue);
+        if (!isNaN(parsedValue) && parsedValue > 0) {
+          setEstimatedValue(parsedValue);
+          setValueNeedsReview(true);
+        }
+      }
 
       setAiSuccessLog("Meticulous Gemini AI scanning parsed! Review below attributes in Step 2.");
       // Move to Step 2 Automatically so they can immediately review fields
@@ -856,10 +864,19 @@ export default function AddEditFormView({
                   type="number"
                   required
                   value={estimatedValue}
-                  onChange={(e) => setEstimatedValue(Number(e.target.value))}
+                  onChange={(e) => {
+                    setEstimatedValue(Number(e.target.value));
+                    setValueNeedsReview(false);
+                  }}
                   placeholder="e.g. 25000"
                   className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249]"
                 />
+                {valueNeedsReview && (
+                  <p className="text-[9px] text-amber-700 mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 shrink-0" />
+                    AI-suggested figure — a rough starting point only, not an appraisal. Verify with a professional before relying on it for insurance.
+                  </p>
+                )}
               </div>
 
               {/* Condition */}
