@@ -11,8 +11,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Upload,
-  RefreshCw,
-  Compass
+  RefreshCw
 } from "lucide-react";
 
 interface AddEditFormViewProps {
@@ -225,7 +224,7 @@ export default function AddEditFormView({
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-        setPhotos([dataUrl]);
+        setPhotos((prev) => [...prev, dataUrl]);
         stopLiveCamera();
         
         // Sound beep
@@ -266,47 +265,33 @@ export default function AddEditFormView({
     }
   }, [step]);
 
-  // Stock Presets for Mock Physical scans in browser sandbox
-  const fieldPresets = [
-    {
-      title: "Ancient Mughal Battle Talwar",
-      image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&q=80&w=400",
-      category: "Weaponry & Armor"
-    },
-    {
-      title: "Royal Maharaja Court Painting",
-      image: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400",
-      category: "Artwork & Paintings"
-    },
-    {
-      title: "Traditional Blue Pottery Vase",
-      image: "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&q=80&w=400",
-      category: "Ceramics & Pottery"
-    },
-    {
-      title: "Lacquered sandalwood Gita Manuscript",
-      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=400",
-      category: "Manuscripts & Books"
-    }
-  ];
-
-  const handleApplyPreset = (preset: typeof fieldPresets[0]) => {
-    // Pack the selected preset as an active image
-    setPhotos([preset.image]);
-  };
-
-  // Convert uploaded image file to Base64 to supply to backend/Gemini
+  // Convert uploaded image file(s) to Base64 to supply to backend/Gemini
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPhotos([reader.result]);
-      }
-    };
-    reader.readAsDataURL(file);
+    const readers = Array.from(files).map((file) => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === "string") resolve(reader.result);
+          else reject(new Error("Failed to read file"));
+        };
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(readers)
+      .then((dataUrls) => {
+        setPhotos((prev) => [...prev, ...dataUrls]);
+      })
+      .catch((err) => {
+        console.error("Failed to read one or more photo files:", err);
+      });
+
+    // Reset so selecting the same file(s) again still triggers onChange
+    e.target.value = "";
   };
 
   const handleTriggerFileInput = () => {
@@ -316,7 +301,7 @@ export default function AddEditFormView({
   // Gemini AI Analysis execution
   const handleAnalyzeWithAI = async () => {
     if (photos.length === 0) {
-      setAiError("Please select a stock preset, upload a photo, or trigger your physical camera first.");
+      setAiError("Please upload a photo or trigger your physical camera first.");
       return;
     }
 
@@ -337,7 +322,7 @@ export default function AddEditFormView({
         const mimeMatch = parts[0].match(/:(.*?);/);
         if (mimeMatch) mimeType = mimeMatch[1];
       } else {
-        // Remote URL (e.g. stock preset) — fetch it client-side and convert to base64
+        // Remote URL (e.g. an existing photo link on the artifact) — fetch it
         // so the backend always receives actual image bytes, never an empty payload.
         const imgResponse = await fetch(activeImg);
         if (!imgResponse.ok) {
@@ -357,7 +342,7 @@ export default function AddEditFormView({
       }
 
       if (!base64Payload) {
-        throw new Error("No image data available to analyze. Please upload a photo or choose a preset again.");
+        throw new Error("No image data available to analyze. Please upload a photo and try again.");
       }
 
       const response = await fetch("/api/identify", {
@@ -590,7 +575,7 @@ export default function AddEditFormView({
                         />
                         <div className="absolute inset-0 bg-[#1c1a18]/65 opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-center items-center text-white p-2">
                           <Camera className="w-8 h-8 mb-1 animate-pulse" />
-                          <span className="text-xs font-mono font-bold uppercase">Replace Intake Media</span>
+                          <span className="text-xs font-mono font-bold uppercase">Add More Photos</span>
                         </div>
                       </>
                     ) : (
@@ -603,13 +588,64 @@ export default function AddEditFormView({
                   </div>
                 )}
 
+                {photos.length > 0 && (
+                  <div className="flex gap-2 flex-wrap items-center">
+                    {photos.map((p, idx) => (
+                      <div key={idx} className="relative group/thumb">
+                        <img
+                          src={p}
+                          alt={`Photo ${idx + 1}`}
+                          onClick={() => {
+                            // Move this photo to the front — it becomes the
+                            // "main" photo used for the AI scan and as the
+                            // primary thumbnail shown elsewhere in the app.
+                            setPhotos((prev) => {
+                              const next = [...prev];
+                              const [selected] = next.splice(idx, 1);
+                              next.unshift(selected);
+                              return next;
+                            });
+                          }}
+                          className={`w-14 h-14 object-cover rounded border-2 cursor-pointer transition-all ${
+                            idx === 0 ? "border-[#3b5249]" : "border-[#e8e4db] hover:border-[#c4beaf]"
+                          }`}
+                          referrerPolicy="no-referrer"
+                        />
+                        {idx === 0 && (
+                          <span className="absolute -top-1.5 -left-1.5 bg-[#3b5249] text-white text-[8px] font-mono font-bold px-1 rounded">
+                            MAIN
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPhotos((prev) => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] leading-none opacity-0 group-hover/thumb:opacity-100 transition-all"
+                          title="Remove photo"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <div
+                      onClick={handleTriggerFileInput}
+                      className="w-14 h-14 border-2 border-dashed border-[#c4beaf] hover:border-[#3b5249] rounded flex items-center justify-center cursor-pointer text-[#8e847a] hover:text-[#3b5249] transition-all"
+                      title="Add more photos"
+                    >
+                      <span className="text-xl leading-none">+</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleTriggerFileInput}
                     className="flex-1 py-1.5 px-3 bg-white hover:bg-gray-50 border border-[#c4beaf] hover:border-[#3b5249] rounded text-[10px] font-mono font-bold uppercase tracking-wider text-[#3c3730] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5 text-gray-500" /> Upload File
+                    <Upload className="w-3.5 h-3.5 text-gray-500" /> Upload File(s)
                   </button>
                   <button
                     type="button"
@@ -641,43 +677,11 @@ export default function AddEditFormView({
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   ref={fileInputRef}
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-              </div>
-
-              {/* Simulation Templates */}
-              <div className="space-y-3.5 bg-[#f7f5f0] p-4 rounded border border-[#dfd6be]">
-                <div>
-                  <span className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#3b5249] flex items-center gap-1.5">
-                    <Compass className="w-4 h-4 text-[#3b5249]" /> Mock Case Simulators
-                  </span>
-                  <p className="text-[10px] text-[#8e847a] mt-0.5">
-                    Select a preset if testing inside standard emulator desktop browser without a real-time camera.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {fieldPresets.map((pr) => (
-                    <button
-                      key={pr.title}
-                      type="button"
-                      onClick={() => handleApplyPreset(pr)}
-                      className="p-1.5 bg-white hover:bg-emerald-50 border border-[#d2cca0] hover:border-[#3b5249] rounded text-left transition-all cursor-pointer flex gap-2 items-center text-xs active:scale-95 group"
-                    >
-                      <img 
-                        src={pr.image} 
-                        alt="p-thumb" 
-                        className="w-8 h-8 rounded object-cover shrink-0 border border-gray-150"
-                        referrerPolicy="no-referrer"
-                      />
-                      <span className="truncate block font-semibold text-[#1c1a18] text-[10px] group-hover:text-[#3b5249]">
-                        {pr.title}
-                      </span>
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 

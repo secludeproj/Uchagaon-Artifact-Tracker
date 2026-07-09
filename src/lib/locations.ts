@@ -11,9 +11,9 @@ export const ROOMS_BY_BLOCK: Record<string, string[]> = {
     "Machan Common Areas", "Hog n Horse Entrance Room", "Hog n Horse Second Room",
     "Hog n Horse Third Room", "First Floor Dining Hall (Main)", "Risala",
   ],
-  "B Block — Machan": [
-    "Room 9 (Air Room)", "Room 10", "Room 11 (Empty)", "Room 14", "Varanda Area",
-    "Room 15", "Room 16 (Leakage)", "Room 17", "Room 18",
+  "B Block": [
+    "Room 9", "Room 10", "Room 11", "Room 14", "Varanda Area",
+    "Room 15", "Room 16", "Room 17", "Room 18",
   ],
   "C Block — Collector's Court": [
     "Room 21", "Room 22", "Room 23", "Room 31", "Room 32", "Room 33", "Room 34",
