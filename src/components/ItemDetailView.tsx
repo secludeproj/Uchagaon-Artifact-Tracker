@@ -284,11 +284,17 @@ export default function ItemDetailView({
         })
       });
 
-      if (!response.ok) {
-        throw new Error("Analysis failed");
+      let data: any;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || `Analysis failed (HTTP ${response.status}).`);
+      }
+
       setComparisonNotes(data.notes || data.recommendations || "Analysis complete. Please review findings.");
     } catch (err: any) {
       console.error(err);

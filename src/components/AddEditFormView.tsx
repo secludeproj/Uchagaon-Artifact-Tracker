@@ -355,11 +355,18 @@ export default function AddEditFormView({
         })
       });
 
-      if (!response.ok) {
-        throw new Error("Intake analysis service failed to process photo.");
+      let data: any;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          data?.error || `Intake analysis service failed to process photo (HTTP ${response.status}).`
+        );
+      }
 
       // Surface any error the backend reported, instead of silently no-oping
       if (data.error) {

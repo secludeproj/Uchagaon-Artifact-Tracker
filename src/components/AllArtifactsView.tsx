@@ -90,8 +90,13 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: textToSearch, items: artifacts })
       });
-      if (!res.ok) throw new Error("AI search response error");
-      const data = await res.json();
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+      if (!res.ok) throw new Error(data?.error || `AI search response error (HTTP ${res.status}).`);
       const geminiIds = data.ids || data.matchedIds || [];
       // Merge local + Gemini results, deduplicated
       const merged = [...new Set([...geminiIds, ...localMatches])];
