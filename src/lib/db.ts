@@ -4,7 +4,7 @@
 // ============================================================
 
 import { supabase, DbArtifact, DbMovementLog, DbInspectionLog } from './supabase';
-import { Artifact, MovementLog, Staff, TeamActivity } from '../types';
+import { Artifact, MovementLog, Staff, TeamActivity, Duty } from '../types';
 
 // ── Converters ────────────────────────────────────────────────────────────────
 
@@ -278,6 +278,85 @@ export async function fetchTeamActivity(): Promise<TeamActivity[]> {
     timestamp: r.timestamp,
     details: r.details,
   }));
+}
+
+// ── Staff Duty Log ─────────────────────────────────────────────────────────────
+
+export async function fetchDuties(): Promise<Duty[]> {
+  const { data, error } = await supabase
+    .from('duties')
+    .select('*')
+    .order('assigned_date', { ascending: false });
+
+  if (error) throw error;
+  return (data || []).map((d: any) => ({
+    id: d.id,
+    assignedToName: d.assigned_to_name,
+    task: d.task,
+    relatedItemId: d.related_item_id || undefined,
+    relatedItemName: d.related_item_name || undefined,
+    status: d.status,
+    assignedDate: d.assigned_date,
+    assignedBy: d.assigned_by,
+    dueDate: d.due_date || undefined,
+    completedDate: d.completed_date || undefined,
+    notes: d.notes || undefined,
+  }));
+}
+
+export async function addDuty(duty: {
+  assignedToName: string;
+  task: string;
+  relatedItemId?: string;
+  relatedItemName?: string;
+  assignedBy: string;
+  dueDate?: string;
+}): Promise<Duty> {
+  const { data, error } = await supabase
+    .from('duties')
+    .insert({
+      assigned_to_name: duty.assignedToName,
+      task: duty.task,
+      related_item_id: duty.relatedItemId || null,
+      related_item_name: duty.relatedItemName || null,
+      assigned_by: duty.assignedBy,
+      due_date: duty.dueDate || null,
+      status: 'Pending',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return {
+    id: data.id,
+    assignedToName: data.assigned_to_name,
+    task: data.task,
+    relatedItemId: data.related_item_id || undefined,
+    relatedItemName: data.related_item_name || undefined,
+    status: data.status,
+    assignedDate: data.assigned_date,
+    assignedBy: data.assigned_by,
+    dueDate: data.due_date || undefined,
+    completedDate: data.completed_date || undefined,
+    notes: data.notes || undefined,
+  };
+}
+
+export async function updateDutyStatus(id: string, status: 'Pending' | 'Completed'): Promise<void> {
+  const { error } = await supabase
+    .from('duties')
+    .update({
+      status,
+      completed_date: status === 'Completed' ? new Date().toISOString() : null,
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function deleteDuty(id: string): Promise<void> {
+  const { error } = await supabase.from('duties').delete().eq('id', id);
+  if (error) throw error;
 }
 
 // ── Staff / Profiles ──────────────────────────────────────────────────────────

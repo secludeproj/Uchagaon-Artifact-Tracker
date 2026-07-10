@@ -110,7 +110,7 @@ export default function DashboardView({ artifacts, currentUser, onNavigate, onSc
 
         <div className="z-10 relative space-y-1">
           <p className="font-mono text-[9px] uppercase tracking-widest text-[#a8baa2] font-semibold flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3" /> SECLUDE REGISTRY ACTIVE REPORT
+            <Sparkles className="w-3 h-3" /> SECLUDE FORT UCHAGAON — REGISTRY ACTIVE REPORT
           </p>
           <h2 className="font-serif text-2xl font-bold tracking-tight">
             Heritage Custody & Preservation Console

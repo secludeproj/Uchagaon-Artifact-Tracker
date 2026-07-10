@@ -148,7 +148,7 @@ export async function exportPhotoAlbumsByRoom(
   }
 
   const manifest = [
-    "SECLUDE HERITAGE — PHOTO EXPORT MANIFEST",
+    "SECLUDE FORT UCHAGAON — PHOTO EXPORT MANIFEST",
     `Exported: ${exportedCount} photo(s)`,
     `Skipped: ${skippedCount} photo(s)`,
     "",

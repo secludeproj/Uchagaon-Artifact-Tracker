@@ -64,7 +64,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
             <SecludeLogo variant="full" style={{ height: "90px", width: "auto", display: "block", margin: "0 auto" }} />
           </div>
           <h1 className="font-serif text-xl font-bold text-[#1c1a18] tracking-tight">
-            Heritage Registry
+            Seclude Fort Uchagaon
           </h1>
           <p className="text-xs font-mono text-[#8e847a] mt-1 uppercase tracking-widest">
             Heritage Custody & Preservation Console

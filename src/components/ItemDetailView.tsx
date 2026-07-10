@@ -2076,6 +2076,9 @@ export default function ItemDetailView({
                   <h2 className="font-serif text-2xl md:text-3xl font-bold italic text-[#3b5249] tracking-tight">
                     Official Certificate of Archival Custody
                   </h2>
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-[#8c7b6c]">
+                    Seclude Fort Uchagaon
+                  </p>
                   <p className="text-xs text-[#8c7b6c] font-sans">
                     Certificate ID: <span className="font-mono font-bold text-[#140e0b]">{certificateId}</span> &bull; Issued: {new Date().toLocaleString()}
                   </p>

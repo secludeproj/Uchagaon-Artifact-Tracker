@@ -166,10 +166,10 @@ export default function GuestStoryCardView({ itemId }: GuestStoryCardViewProps) 
       {/* 3. Infinite Signature Footer (Visually polished) */}
       <footer className="bg-[#120a07] border-t border-[#1f140f] py-4 text-center px-4">
         <p className="text-[9px] font-mono text-[#736357] leading-relaxed max-w-md mx-auto">
-          Guests of Seclude Hotels are invited to experience these masterworks live in their designated alcoves. Please respect physical boundaries.
+          Guests of Seclude Fort Uchagaon are invited to experience these masterworks live in their designated alcoves. Please respect physical boundaries.
         </p>
         <p className="text-[8px] font-mono text-[#dfb06c]/40 mt-1 uppercase tracking-wider">
-          © {new Date().getFullYear()} Seclude Hotels Group • Hand-Carvings Conservation Lease
+          © {new Date().getFullYear()} Seclude Fort Uchagaon • Hand-Carvings Conservation Lease
         </p>
       </footer>
 

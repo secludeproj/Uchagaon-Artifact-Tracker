@@ -66,3 +66,20 @@ export interface TeamActivity {
   timestamp: string;
   details: string;
 }
+
+// A single assigned task in the staff duty log — e.g. "check and upload the
+// latest photo of the Damascus Sabre" — with an optional link back to the
+// specific artifact it concerns.
+export interface Duty {
+  id: string;
+  assignedToName: string;
+  task: string;
+  relatedItemId?: string;
+  relatedItemName?: string;
+  status: 'Pending' | 'Completed';
+  assignedDate: string;
+  assignedBy: string;
+  dueDate?: string;
+  completedDate?: string;
+  notes?: string;
+}

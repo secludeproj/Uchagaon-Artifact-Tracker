@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Artifact, Staff, TeamActivity } from "./types";
+import { Artifact, Staff, TeamActivity, Duty } from "./types";
 
 // Supabase
 import { supabase } from "./lib/supabase";
 import { exportPhotoAlbumsByRoom } from "./lib/photoExport";
+import { PROPERTY_NAME, LEASE_START_DATE, formatDisplayDate } from "./lib/propertyConfig";
 import {
   fetchAllArtifacts,
   insertArtifact,
@@ -17,6 +18,10 @@ import {
   upsertProfile,
   fetchProfile,
   bulkInsertArtifacts,
+  fetchDuties,
+  addDuty,
+  updateDutyStatus,
+  deleteDuty,
 } from "./lib/db";
 
 // Components
@@ -31,6 +36,7 @@ import BulkImportView from "./components/BulkImportView";
 import QRHubView from "./components/QRHubView";
 import ReconciliationReportView from "./components/ReconciliationReportView";
 import TeamView from "./components/TeamView";
+import StaffLogView from "./components/StaffLogView";
 import QRScannerModal from "./components/QRScannerModal";
 import GuestStoryCardView from "./components/GuestStoryCardView";
 import EditProfileModal from "./components/EditProfileModal";
@@ -42,7 +48,7 @@ import SecludeLogo from "./components/SecludeLogo";
 import {
   Compass, Layers, MapPin, QrCode, FileText, Users,
   User as UserIcon, LogOut, Menu, X, Download, Sparkles,
-  FileSpreadsheet, Camera, Trash2, Shield, CalendarDays
+  FileSpreadsheet, Camera, Trash2, Shield, CalendarDays, ClipboardList
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -68,6 +74,7 @@ export default function App() {
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [activity, setActivity] = useState<TeamActivity[]>([]);
+  const [duties, setDuties] = useState<Duty[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inventoryError, setInventoryError] = useState("");
   const [isOnline, setIsOnline] = useState(true);
@@ -186,6 +193,16 @@ subscription.unsubscribe();
     } finally {
       setIsLoading(false);
     }
+
+    // Duties load separately and quietly — if the "duties" table hasn't
+    // been created yet in Supabase, this shouldn't take down the rest of
+    // the app, it just leaves the Staff Duty Log empty until it is.
+    try {
+      const dts = await fetchDuties();
+      setDuties(dts);
+    } catch (err) {
+      console.warn("Duty log not available yet:", err);
+    }
   };
 
   // Set up Supabase Realtime subscription for live updates
@@ -296,6 +313,44 @@ subscription.unsubscribe();
   };
 
   // ── CRUD Operations ────────────────────────────────────────────────────────
+
+  // ── Staff Duty Log handlers ────────────────────────────────────────────────
+  const handleAddDuty = async (duty: {
+    assignedToName: string;
+    task: string;
+    relatedItemId?: string;
+    relatedItemName?: string;
+    dueDate?: string;
+  }) => {
+    try {
+      const created = await addDuty({ ...duty, assignedBy: currentUser?.name || "Admin" });
+      setDuties((prev) => [created, ...prev]);
+    } catch (err) {
+      console.warn("Failed to assign duty:", err);
+      alert("Could not assign this duty. Please check your connection and try again.");
+    }
+  };
+
+  const handleUpdateDutyStatus = async (id: string, status: "Pending" | "Completed") => {
+    setDuties((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, status, completedDate: status === "Completed" ? new Date().toISOString() : undefined } : d))
+    );
+    try {
+      await updateDutyStatus(id, status);
+    } catch (err) {
+      console.warn("Failed to update duty status:", err);
+    }
+  };
+
+  const handleDeleteDuty = async (id: string) => {
+    if (!window.confirm("Remove this duty from the log? This cannot be undone.")) return;
+    setDuties((prev) => prev.filter((d) => d.id !== id));
+    try {
+      await deleteDuty(id);
+    } catch (err) {
+      console.warn("Failed to delete duty:", err);
+    }
+  };
 
   const handleSaveItem = async (payload: any) => {
     if (!currentUser) return;
@@ -532,12 +587,21 @@ subscription.unsubscribe();
 
   const userRole = currentUser?.role?.trim()?.toUpperCase() || "";
   const isOwnerView = (userRole === "OWNER VIEW" || userRole === "OWNER" || userRole === "READ-ONLY") && userRole !== "SUPER_ADMIN";
+  const isAdminRole = userRole === "SUPER_ADMIN" || userRole === "ADMIN" || userRole.includes("CONSERVATOR") || userRole.includes("CHIEF");
 
   return (
     <div className="min-h-screen bg-[#f7f5f0] flex flex-col justify-between">
 
       {/* Header */}
       <header className="no-print bg-[#1c1a18] text-[#fdfcf7] border-b border-[#2e2622] sticky top-0 z-40">
+        <div className="bg-[#141210] border-b border-[#2e2622] px-4 sm:px-6 lg:px-8 py-1 flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-0.5 text-[9.5px] font-mono text-[#a89f8f]">
+          <span className="font-bold tracking-wide">{PROPERTY_NAME}</span>
+          <span className="flex items-center gap-3">
+            <span>Lease Start: <strong className="text-[#c9c0ac]">{formatDisplayDate(LEASE_START_DATE)}</strong></span>
+            <span className="text-[#4a453e]">|</span>
+            <span>Today: <strong className="text-[#c9c0ac]">{formatDisplayDate(new Date().toISOString())}</strong></span>
+          </span>
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <button onClick={() => navigateToView("dashboard")}
@@ -630,6 +694,7 @@ subscription.unsubscribe();
               { id: "qrhub", label: "QR Label Hub", icon: QrCode },
               { id: "reconcile", label: "Lease Reconcile", icon: FileText },
               { id: "team", label: "Team Activities", icon: Users },
+              { id: "stafflog", label: "Staff Duty Log", icon: ClipboardList },
               { id: "admin", label: "Admin Panel", icon: Shield },
             ].filter(m => {
               if (m.id === "reconcile" || m.id === "team") {
@@ -702,6 +767,7 @@ subscription.unsubscribe();
                 { id: "qrhub", label: "QR Label Hub", icon: QrCode },
                 { id: "reconcile", label: "Lease Reconcile", icon: FileText },
                 { id: "team", label: "Team Activities", icon: Users },
+                { id: "stafflog", label: "Staff Duty Log", icon: ClipboardList },
                 { id: "admin", label: "Admin Panel", icon: Shield },
               ].filter(m => {
                 if (m.id === "reconcile" || m.id === "team") {
@@ -786,6 +852,19 @@ subscription.unsubscribe();
             {activeView === "team" && (
               <TeamView staff={staff} activity={activity} currentUser={currentUser}
                 onBack={() => navigateToView("dashboard")} />
+            )}
+            {activeView === "stafflog" && (
+              <StaffLogView
+                duties={duties}
+                staff={staff}
+                artifacts={artifacts}
+                currentUser={currentUser}
+                isAdmin={isAdminRole}
+                onBack={() => navigateToView("dashboard")}
+                onAddDuty={handleAddDuty}
+                onUpdateStatus={handleUpdateDutyStatus}
+                onDeleteDuty={handleDeleteDuty}
+              />
             )}
             {activeView === "admin" && userRole === "SUPER_ADMIN" && (
               <AdminPanel currentUser={currentUser} onBack={() => navigateToView("dashboard")} />
