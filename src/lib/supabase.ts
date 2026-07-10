@@ -29,7 +29,7 @@ export interface DbArtifact {
   dimensions: string;
   quantity: number;
   condition: string;
-  estimated_value: number;
+  estimated_value: number | null;
   original_location: string;
   current_location: string;
   status: string;

@@ -643,7 +643,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
 
                             {/* Value */}
                             <td className="p-2 font-mono text-right font-semibold text-[#1c1a18]">
-                              ₹ {item.estimatedValue.toLocaleString()}
+                              ₹ {(item.estimatedValue ?? 0).toLocaleString()}
                             </td>
                           </tr>
                         );

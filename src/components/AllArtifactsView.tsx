@@ -562,7 +562,7 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
                         </div>
                         <div className="truncate text-right">
                           <span className="text-[#a09488]">Value:</span>{" "}
-                          <span className="text-[#1c1a18] font-bold">₹ {item.estimatedValue.toLocaleString()}</span>
+                          <span className="text-[#1c1a18] font-bold">₹ {(item.estimatedValue ?? 0).toLocaleString()}</span>
                         </div>
                       </div>
 

@@ -21,7 +21,7 @@ export interface Artifact {
   dimensions: string;
   quantity?: number; // number of identical/grouped items this record represents (default 1)
   condition: 'Mint' | 'Good' | 'Fair' | 'Poor' | 'Damaged' | 'Not Assessed';
-  estimatedValue: number; // for insurance
+  estimatedValue: number | null; // for insurance — null when not yet assessed
   originalLocation: string; // Palace origin room - mandatory return at lease end
   currentLocation: string;  // Where it is now
   status: 'On Display' | 'In Storage' | 'Under Maintenance' | 'Damaged' | 'Reserved';
