@@ -49,7 +49,24 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
         return;
       }
 
-      const headers = lines[0].split(",").map(h => h.trim().replace(/^["']|["']$/g, ""));
+      // Detect the actual delimiter in use. Pasting straight from a
+      // spreadsheet app (Excel/Google Sheets) copies cells as tab-separated,
+      // not comma-separated — if we only ever split on commas, every column
+      // silently collapses into one and the whole preview shows N/A.
+      const headerLine = lines[0];
+      const commaCount = (headerLine.match(/,/g) || []).length;
+      const tabCount = (headerLine.match(/\t/g) || []).length;
+      const multiSpaceCount = (headerLine.match(/ {2,}/g) || []).length;
+      let delimiter: string | RegExp = ",";
+      if (tabCount > commaCount && tabCount > multiSpaceCount) {
+        delimiter = "\t";
+      } else if (multiSpaceCount > commaCount) {
+        // Some spreadsheet copy/paste renders columns as padded spaces
+        // rather than a real tab or comma character.
+        delimiter = /\s{2,}/;
+      }
+
+      const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ""));
       const parsedRows: any[] = [];
 
       // Running "merged cell" state, carried down across rows until a new
@@ -62,9 +79,10 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
         const line = lines[i].trim();
         if (!line) continue;
 
-        // Splitter that respects quoted commas and preserves empty fields
-        // between commas (essential for merged-cell forward-fill blanks).
-        const rowValues = splitCsvLine(line);
+        // Splitter that respects quoted commas/tabs and preserves empty
+        // fields between delimiters (essential for merged-cell forward-fill
+        // blanks).
+        const rowValues = splitCsvLine(line, delimiter);
 
         const rawRow: Record<string, string> = {};
         headers.forEach((hdr, colIdx) => {
@@ -321,7 +339,11 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
 // comma inside "Weaponry, Arms" doesn't split into two columns) and, unlike
 // the previous regex-based approach, correctly preserves empty fields
 // between commas — which is essential for merged-cell forward-fill blanks.
-function splitCsvLine(line: string): string[] {
+function splitCsvLine(line: string, delimiter: string | RegExp = ","): string[] {
+  if (delimiter instanceof RegExp) {
+    return line.trim().split(delimiter);
+  }
+
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -330,7 +352,7 @@ function splitCsvLine(line: string): string[] {
     const char = line[i];
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(current);
       current = "";
     } else {
