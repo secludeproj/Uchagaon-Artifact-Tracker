@@ -341,7 +341,11 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
 // between commas — which is essential for merged-cell forward-fill blanks.
 function splitCsvLine(line: string, delimiter: string | RegExp = ","): string[] {
   if (delimiter instanceof RegExp) {
-    return line.trim().split(delimiter);
+    // This branch bypassed quote-stripping entirely before — any field
+    // Excel wrapped in quotes (which it does for values containing special
+    // characters, or sometimes just inconsistently) kept its literal " "
+    // characters instead of having them stripped like the comma/tab path does.
+    return line.trim().split(delimiter).map(v => v.trim().replace(/^"(.*)"$/, "$1"));
   }
 
   const result: string[] = [];
@@ -351,7 +355,14 @@ function splitCsvLine(line: string, delimiter: string | RegExp = ","): string[] 
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"') {
-      inQuotes = !inQuotes;
+      if (inQuotes && line[i + 1] === '"') {
+        // Escaped quote inside a quoted field (the "" convention) — emit
+        // one literal " and skip the second quote character.
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
     } else if (char === delimiter && !inQuotes) {
       result.push(current);
       current = "";
