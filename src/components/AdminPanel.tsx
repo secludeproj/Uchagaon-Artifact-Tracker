@@ -243,6 +243,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
+            <span className="block text-[9px] font-mono uppercase tracking-widest text-[#a8baa2] font-bold mb-0.5">Seclude Fort Uchagaon</span>
             <h2 className="font-serif text-lg font-bold tracking-tight">Admin Control Panel</h2>
             <p className="text-[11px] font-mono text-gray-400 mt-0.5">Super Admin Panel — only SUPER_ADMIN can change roles. Logged by {currentUser.name}</p>
           </div>

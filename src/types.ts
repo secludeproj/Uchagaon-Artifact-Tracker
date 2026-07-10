@@ -20,7 +20,7 @@ export interface Artifact {
   material: string;
   dimensions: string;
   quantity?: number; // number of identical/grouped items this record represents (default 1)
-  condition: 'Mint' | 'Good' | 'Fair' | 'Poor' | 'Damaged';
+  condition: 'Mint' | 'Good' | 'Fair' | 'Poor' | 'Damaged' | 'Not Assessed';
   estimatedValue: number; // for insurance
   originalLocation: string; // Palace origin room - mandatory return at lease end
   currentLocation: string;  // Where it is now

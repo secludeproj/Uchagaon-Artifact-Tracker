@@ -4,7 +4,7 @@ import { Artifact, Staff, TeamActivity, Duty } from "./types";
 // Supabase
 import { supabase } from "./lib/supabase";
 import { exportPhotoAlbumsByRoom } from "./lib/photoExport";
-import { PROPERTY_NAME, LEASE_START_DATE, formatDisplayDate } from "./lib/propertyConfig";
+import { PROPERTY_NAME, formatDisplayDate } from "./lib/propertyConfig";
 import {
   fetchAllArtifacts,
   insertArtifact,
@@ -596,11 +596,7 @@ subscription.unsubscribe();
       <header className="no-print bg-[#1c1a18] text-[#fdfcf7] border-b border-[#2e2622] sticky top-0 z-40">
         <div className="bg-[#141210] border-b border-[#2e2622] px-4 sm:px-6 lg:px-8 py-1 flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-0.5 text-[9.5px] font-mono text-[#a89f8f]">
           <span className="font-bold tracking-wide">{PROPERTY_NAME}</span>
-          <span className="flex items-center gap-3">
-            <span>Lease Start: <strong className="text-[#c9c0ac]">{formatDisplayDate(LEASE_START_DATE)}</strong></span>
-            <span className="text-[#4a453e]">|</span>
-            <span>Today: <strong className="text-[#c9c0ac]">{formatDisplayDate(new Date().toISOString())}</strong></span>
-          </span>
+          <span>Today: <strong className="text-[#c9c0ac]">{formatDisplayDate(new Date().toISOString())}</strong></span>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -615,7 +611,7 @@ subscription.unsubscribe();
                 style={{ height: "26px", width: "auto", opacity: "0.95", marginBottom: "2px", display: "block" }}
               />
               <h1 className="font-serif text-[13px] sm:text-[15px] font-bold tracking-tight text-white leading-none mt-0.5 flex flex-wrap items-center gap-2">
-                <span className="hidden sm:inline">SECLUDE INVENTORY MANAGER</span>
+                <span className="hidden sm:inline">SECLUDE FORT UCHAGAON — INVENTORY MANAGER</span>
                 <span className="inline sm:hidden">SECLUDE</span>
                 {isOnline ? (
                   <span className="inline-flex items-center gap-1 text-[8px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-900 leading-none shadow-sm">

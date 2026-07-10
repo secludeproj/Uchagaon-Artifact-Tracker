@@ -211,6 +211,7 @@ export default function AllArtifactsView({ artifacts, activeFilter, onNavigate }
       {/* Title block */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
+          <span className="block text-[9px] font-mono uppercase tracking-widest text-[#8e847a] font-bold mb-0.5">Seclude Fort Uchagaon</span>
           <h2 className="font-serif text-xl font-bold text-[#1c1a18]">
             Heritage Asset Inventory Registry
           </h2>

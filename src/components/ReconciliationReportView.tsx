@@ -356,6 +356,7 @@ export default function ReconciliationReportView({ artifacts, onBack }: Reconcil
       {/* 1. Header Bar */}
       <div className="no-print flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-[#dfd6be] pb-3">
         <div>
+          <span className="block text-[9px] font-mono uppercase tracking-widest text-[#8e847a] font-bold mb-0.5">Seclude Fort Uchagaon</span>
           <h2 className="font-serif text-xl font-bold text-[#1c1a18]">
             Palace Lease Reconciliation Audit
           </h2>

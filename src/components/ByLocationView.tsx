@@ -46,6 +46,7 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
     <div className="space-y-6">
       {/* Title */}
       <div>
+        <span className="block text-[9px] font-mono uppercase tracking-widest text-[#8e847a] font-bold mb-0.5">Seclude Fort Uchagaon</span>
         <h2 className="font-serif text-xl font-bold text-[#1c1a18]">
           Registry Grouped By Spatial Locations
         </h2>

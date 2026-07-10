@@ -27,7 +27,8 @@ import {
   QrCode,
   Award,
   ShieldCheck,
-  GitBranch
+  GitBranch,
+  Link as LinkIcon
 } from "lucide-react";
 
 interface ItemDetailViewProps {
@@ -1379,6 +1380,24 @@ export default function ItemDetailView({
                     <strong>{item.dimensions || "Not calculated yet"}</strong>
                   </span>
                 </div>
+
+                {item.subCategory && (
+                  <div className="flex items-center gap-2 text-xs font-serif text-[#1c1a18]">
+                    <Bookmark className="w-4 h-4 text-[#3b5249]" />
+                    <span>
+                      <span className="text-[#8e847a] font-sans text-[11px] uppercase tracking-wider block">Sub-Category</span>
+                      <strong>{item.subCategory}</strong>
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-xs font-serif text-[#1c1a18]">
+                  <FileText className="w-4 h-4 text-[#3b5249]" />
+                  <span>
+                    <span className="text-[#8e847a] font-sans text-[11px] uppercase tracking-wider block">Quantity</span>
+                    <strong>{item.quantity ?? 1}</strong>
+                  </span>
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -1405,6 +1424,25 @@ export default function ItemDetailView({
                     <strong className={isReturnedToOrigin ? "text-emerald-700" : "text-amber-700"}>
                       {item.currentLocation} {isReturnedToOrigin ? " (✓ Matched)" : " (↳ Relocated)"}
                     </strong>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs font-serif text-[#1c1a18]">
+                  <LinkIcon className="w-4 h-4 text-[#3b5249]" />
+                  <span>
+                    <span className="text-[#8e847a] font-sans text-[11px] uppercase tracking-wider block">Room Photo Drive Folder</span>
+                    {item.driveLink ? (
+                      <a
+                        href={item.driveLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-700 underline font-bold break-all"
+                      >
+                        Open Drive Folder ↗
+                      </a>
+                    ) : (
+                      <strong className="text-gray-400 italic font-normal">No drive link on file</strong>
+                    )}
                   </span>
                 </div>
               </div>

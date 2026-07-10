@@ -44,6 +44,9 @@ export default function AddEditFormView({
   const [estimatedAge, setEstimatedAge] = useState(existingItem?.estimatedAge || "");
   const [material, setMaterial] = useState(existingItem?.material || "");
   const [dimensions, setDimensions] = useState(existingItem?.dimensions || "");
+  const [subCategory, setSubCategory] = useState(existingItem?.subCategory || "");
+  const [quantity, setQuantity] = useState(existingItem?.quantity ?? 1);
+  const [driveLink, setDriveLink] = useState(existingItem?.driveLink || "");
   const [condition, setCondition] = useState<Artifact["condition"]>(existingItem?.condition || "Good");
   const [estimatedValue, setEstimatedValue] = useState(existingItem?.estimatedValue || 1000);
   const [valueNeedsReview, setValueNeedsReview] = useState(false);
@@ -448,6 +451,9 @@ export default function AddEditFormView({
         estimatedAge,
         material,
         dimensions,
+        subCategory: subCategory || undefined,
+        quantity,
+        driveLink: driveLink || undefined,
         condition,
         estimatedValue: Number(estimatedValue) || 0,
         originalLocation,
@@ -885,6 +891,48 @@ export default function AddEditFormView({
                 />
               </div>
 
+              {/* Sub-Category */}
+              <div>
+                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#5c544d] mb-1">
+                  Sub-Category (optional)
+                </label>
+                <input
+                  type="text"
+                  value={subCategory}
+                  onChange={(e) => setSubCategory(e.target.value)}
+                  placeholder="e.g. Dagger, Powder Horn"
+                  className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249]"
+                />
+              </div>
+
+              {/* Quantity */}
+              <div>
+                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#5c544d] mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249]"
+                />
+              </div>
+
+              {/* Drive Link */}
+              <div>
+                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#5c544d] mb-1">
+                  Room Photo Drive Folder (optional)
+                </label>
+                <input
+                  type="url"
+                  value={driveLink}
+                  onChange={(e) => setDriveLink(e.target.value)}
+                  placeholder="https://drive.google.com/drive/folders/..."
+                  className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249]"
+                />
+              </div>
+
               {/* Estimated Value */}
               <div>
                 <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#5c544d] mb-1">
@@ -924,6 +972,7 @@ export default function AddEditFormView({
                   <option value="Fair">Fair</option>
                   <option value="Poor">Poor</option>
                   <option value="Damaged">Damaged</option>
+                  <option value="Not Assessed">Not Assessed</option>
                 </select>
               </div>
 
