@@ -93,6 +93,7 @@ export default function App() {
   // revalidation (which fires SIGNED_IN again for the SAME user) doesn't
   // trigger a full reload every time you switch back to this tab.
   const loadedUserIdRef = useRef<string | null>(null);
+  const isPoppingHistory = useRef(false);
 
   useEffect(() => {
     // Get initial session
@@ -230,6 +231,40 @@ subscription.unsubscribe();
     };
   }, [currentUser?.id]);
 
+  // Intercept back-button / swipe-back so it navigates between screens
+  // inside the app (like a native app would) instead of exiting straight to
+  // whatever page was open before — this only works because navigateToView
+  // pushes a history entry for every screen change; this listener just
+  // reacts when the browser pops one of those entries.
+  useEffect(() => {
+    // Establish a baseline entry for the very first screen so there's
+    // something for the *first* pop to land on rather than exiting.
+    window.history.replaceState({ view: "dashboard", targetId: null }, "", "");
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as { view?: string; targetId?: string | null } | null;
+      isPoppingHistory.current = true;
+      if (state?.view) {
+        setActiveView(state.view);
+        if (state.view === "all" && state.targetId) {
+          setFilteredStateMode(state.targetId);
+        } else {
+          setFilteredStateMode(undefined);
+        }
+        if (state.targetId && state.view !== "all") {
+          setSelectedItemId(state.targetId);
+        }
+      } else {
+        setActiveView("dashboard");
+      }
+      // Reset on next tick so subsequent manual navigations push normally.
+      setTimeout(() => { isPoppingHistory.current = false; }, 0);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   // ── Auth Handlers ──────────────────────────────────────────────────────────
 
   const handleLoginSuccess = () => {
@@ -309,6 +344,14 @@ subscription.unsubscribe();
 
     if (targetId && targetView !== "all") {
       setSelectedItemId(targetId);
+    }
+
+    // Push a browser history entry for this internal screen change — without
+    // this, the very first back-swipe/back-button press has nothing to
+    // "land on" inside the app and just exits straight to whatever page was
+    // open before, since we never left a trail of history states behind.
+    if (!isPoppingHistory.current) {
+      window.history.pushState({ view: targetView, targetId: targetId || null }, "", "");
     }
   };
 
