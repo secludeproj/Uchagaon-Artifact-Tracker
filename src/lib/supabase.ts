@@ -22,10 +22,12 @@ export interface DbArtifact {
   qr_code: string;
   name: string;
   category: string;
+  sub_category: string | null;
   description: string;
   estimated_age: string;
   material: string;
   dimensions: string;
+  quantity: number;
   condition: string;
   estimated_value: number;
   original_location: string;
@@ -34,6 +36,7 @@ export interface DbArtifact {
   photos: string[];
   handling_notes: string;
   conservation_notes: string;
+  drive_link: string | null;
   last_inspected_date: string | null;
   story: string;
   added_by: string;

@@ -18,10 +18,12 @@ export function dbToArtifact(
     qrCode: row.qr_code,
     name: row.name,
     category: row.category as Artifact['category'],
+    subCategory: row.sub_category || undefined,
     description: row.description,
     estimatedAge: row.estimated_age,
     material: row.material,
     dimensions: row.dimensions,
+    quantity: row.quantity ?? 1,
     condition: row.condition as Artifact['condition'],
     estimatedValue: row.estimated_value,
     originalLocation: row.original_location,
@@ -30,6 +32,7 @@ export function dbToArtifact(
     photos: row.photos || [],
     handlingNotes: row.handling_notes,
     conservationNotes: row.conservation_notes,
+    driveLink: row.drive_link || undefined,
     lastInspectedDate: row.last_inspected_date || '',
     story: row.story,
     addedBy: row.added_by,
@@ -63,10 +66,12 @@ export function artifactToDb(artifact: Partial<Artifact>): Partial<DbArtifact> {
   if (artifact.name !== undefined) db.name = artifact.name;
   if (artifact.qrCode !== undefined) db.qr_code = artifact.qrCode;
   if (artifact.category !== undefined) db.category = artifact.category;
+  if (artifact.subCategory !== undefined) db.sub_category = artifact.subCategory || null;
   if (artifact.description !== undefined) db.description = artifact.description;
   if (artifact.estimatedAge !== undefined) db.estimated_age = artifact.estimatedAge;
   if (artifact.material !== undefined) db.material = artifact.material;
   if (artifact.dimensions !== undefined) db.dimensions = artifact.dimensions;
+  if (artifact.quantity !== undefined) db.quantity = artifact.quantity;
   if (artifact.condition !== undefined) db.condition = artifact.condition;
   if (artifact.estimatedValue !== undefined) db.estimated_value = artifact.estimatedValue;
   if (artifact.originalLocation !== undefined) db.original_location = artifact.originalLocation;
@@ -75,6 +80,7 @@ export function artifactToDb(artifact: Partial<Artifact>): Partial<DbArtifact> {
   if (artifact.photos !== undefined) db.photos = artifact.photos;
   if (artifact.handlingNotes !== undefined) db.handling_notes = artifact.handlingNotes;
   if (artifact.conservationNotes !== undefined) db.conservation_notes = artifact.conservationNotes;
+  if (artifact.driveLink !== undefined) db.drive_link = artifact.driveLink || null;
   if (artifact.lastInspectedDate !== undefined) db.last_inspected_date = artifact.lastInspectedDate || null;
   if (artifact.story !== undefined) db.story = artifact.story;
   if (artifact.addedBy !== undefined) db.added_by = artifact.addedBy;
