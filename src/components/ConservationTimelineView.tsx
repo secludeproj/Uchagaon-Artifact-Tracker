@@ -164,7 +164,7 @@ export default function ConservationTimelineView({ item, onBack }: ConservationT
 
   // Check if overdue
   const isOverdue = (() => {
-    if (!item.lastInspectedDate) return true;
+    if (!item.lastInspectedDate) return false; // never inspected yet — not the same as overdue
     const d = new Date(item.lastInspectedDate);
     const now = new Date();
     return (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24 * 30.43) >= 6;
@@ -172,7 +172,7 @@ export default function ConservationTimelineView({ item, onBack }: ConservationT
 
   // Next inspection due
   const nextDue = (() => {
-    if (!item.lastInspectedDate) return "Overdue – No record";
+    if (!item.lastInspectedDate) return "Not Yet Inspected";
     const d = new Date(item.lastInspectedDate);
     d.setMonth(d.getMonth() + 6);
     return d.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });

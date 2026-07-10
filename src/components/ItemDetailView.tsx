@@ -355,10 +355,10 @@ export default function ItemDetailView({
 
   // Overdue calculation (6 months trigger)
   const isOverdue = (dateStr: string) => {
-    if (!dateStr) return true;
+    if (!dateStr) return false; // never inspected yet — not the same as overdue
     try {
       const inspectDate = new Date(dateStr);
-      const today = new Date("2026-06-19");
+      const today = new Date();
       const diffMs = today.getTime() - inspectDate.getTime();
       const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.43);
       return diffMonths >= 6;
