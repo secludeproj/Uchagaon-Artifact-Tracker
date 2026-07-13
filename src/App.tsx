@@ -333,7 +333,7 @@ subscription.unsubscribe();
     let targetView = view;
     if ((view === "reconcile" || view === "team") && !isAdmin) targetView = "dashboard";
     if (view === "admin" && userRole !== "SUPER_ADMIN") targetView = "dashboard";
-    if ((view === "add" || view === "edit" || view === "bulk") && isOwnerView) targetView = "dashboard";
+    if ((view === "add" || view === "edit" || view === "bulk" || view === "photointake") && isOwnerView) targetView = "dashboard";
 
     setActiveView(targetView);
 
@@ -359,13 +359,13 @@ subscription.unsubscribe();
   // ── CRUD Operations ────────────────────────────────────────────────────────
 
   // ── Staff Duty Log handlers ────────────────────────────────────────────────
-  // Saves just the photos field for one item — used by Rapid Photo Intake
+  // Saves photos and description for one item — used by Rapid Photo Intake
   // so working through hundreds of items doesn't require opening the full
   // Add/Edit form (with all its other required fields) for each one.
-  const handleSavePhotos = async (itemId: string, photos: string[]) => {
+  const handleSavePhotos = async (itemId: string, photos: string[], description: string) => {
     try {
-      await updateArtifact(itemId, { photos }, { name: currentUser?.name || "", email: currentUser?.email || "" });
-      setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos } : a)));
+      await updateArtifact(itemId, { photos, description }, { name: currentUser?.name || "", email: currentUser?.email || "" });
+      setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos, description } : a)));
     } catch (err) {
       console.warn("Failed to save photos:", err);
       alert("Could not save this item's photos. Please check your connection and try again.");
@@ -757,6 +757,9 @@ subscription.unsubscribe();
               if (m.id === "admin") {
                 return userRole === "SUPER_ADMIN";
               }
+              if (m.id === "photointake") {
+                return !isOwnerView;
+              }
               return true;
             }).map(m => {
               const Icon = m.icon;
@@ -830,6 +833,9 @@ subscription.unsubscribe();
                 }
                 if (m.id === "admin") {
                   return userRole === "SUPER_ADMIN";
+                }
+                if (m.id === "photointake") {
+                  return !isOwnerView;
                 }
                 return true;
               }).map(m => {

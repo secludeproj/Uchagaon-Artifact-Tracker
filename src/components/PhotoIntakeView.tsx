@@ -10,7 +10,7 @@ import {
 interface PhotoIntakeViewProps {
   artifacts: Artifact[];
   onBack: () => void;
-  onSavePhotos: (itemId: string, photos: string[]) => Promise<void> | void;
+  onSavePhotos: (itemId: string, photos: string[], description: string) => Promise<void> | void;
 }
 
 // A streamlined, one-item-at-a-time photo intake screen — built specifically
@@ -24,6 +24,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
   const [stagedPhotos, setStagedPhotos] = useState<string[] | null>(null);
   const [croppingIdx, setCroppingIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [stagedDescription, setStagedDescription] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +47,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
 
   const current = queue[Math.min(index, queue.length - 1)];
   const workingPhotos = stagedPhotos ?? current?.photos ?? [];
+  const workingDescription = stagedDescription ?? current?.description ?? "";
 
   const totalWithoutPhotos = useMemo(
     () => artifacts.filter(a => !a.photos || a.photos.length === 0).length,
@@ -70,6 +72,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
 
   const goTo = (newIndex: number) => {
     setStagedPhotos(null);
+    setStagedDescription(null);
     setIndex(Math.max(0, Math.min(newIndex, queue.length - 1)));
   };
 
@@ -77,7 +80,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
     if (!current) return;
     setSaving(true);
     try {
-      await onSavePhotos(current.id, workingPhotos);
+      await onSavePhotos(current.id, workingPhotos, workingDescription);
     } finally {
       setSaving(false);
       // Don't just increment — once the parent's artifacts prop refreshes,
@@ -162,6 +165,34 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
         <div>
           <h3 className="font-serif text-lg font-bold text-[#1c1a18]">{current.name}</h3>
           <p className="text-xs font-mono text-[#8e847a]">{current.currentLocation} • {current.category}</p>
+
+          {/* Extra identifying context — many bulk-imported names are
+              generic ("Sofa", "Shelf", "Pot"), so this is what actually
+              lets you confirm you've got the right physical item before
+              attaching a photo to it. */}
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-[#6e645a]">
+            {current.subCategory && <span><strong className="text-[#3b5249]">Original label:</strong> {current.subCategory}</span>}
+            {current.dimensions && <span><strong className="text-[#3b5249]">Dimensions:</strong> {current.dimensions}</span>}
+            {current.material && <span><strong className="text-[#3b5249]">Material:</strong> {current.material}</span>}
+            {current.quantity && current.quantity > 1 && <span><strong className="text-[#3b5249]">Qty:</strong> {current.quantity}</span>}
+            {current.handlingNotes && <span><strong className="text-[#3b5249]">Notes:</strong> {current.handlingNotes}</span>}
+          </div>
+        </div>
+
+        {/* Editable description — most bulk-imported items never had one
+            filled in, and this is the natural moment to add it, since
+            you're already looking at the physical item to photograph it. */}
+        <div>
+          <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#5c544d] mb-1">
+            Description (fill in or correct while you're looking at it)
+          </label>
+          <textarea
+            value={workingDescription}
+            onChange={(e) => setStagedDescription(e.target.value)}
+            rows={2}
+            placeholder="e.g. Carved rosewood side table with brass inlay, minor scuff on left leg"
+            className="w-full text-xs p-2.5 bg-white border border-[#c8c2b5] rounded focus:outline-none focus:border-[#3b5249]"
+          />
         </div>
 
         {/* Existing/staged photos */}
@@ -232,7 +263,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
           </button>
           <button
             onClick={handleSaveAndNext}
-            disabled={saving || workingPhotos.length === 0}
+            disabled={saving || (workingPhotos.length === 0 && !workingDescription.trim())}
             className="flex-1 p-2 px-4 bg-[#3b5249] hover:bg-[#2c3d36] text-white rounded text-xs font-mono font-bold uppercase disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
           >
             {saving ? "Saving..." : <>Save & Next <ArrowRight className="w-3.5 h-3.5" /></>}
