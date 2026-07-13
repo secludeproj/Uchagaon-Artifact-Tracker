@@ -213,21 +213,38 @@ subscription.unsubscribe();
 
     loadAllData();
 
-    // Subscribe to artifact changes — updates appear instantly for all users
+    // Debounce reloads triggered by realtime events. Postgres fires one
+    // change event PER ROW, not once per operation — so a 600+ row bulk
+    // import, or a burst of photo saves, was triggering hundreds of full
+    // artifact-table reloads back to back. Each reload re-downloads every
+    // artifact (including any embedded photo data), which is what actually
+    // blew through the Supabase free-tier egress quota. Collapsing a burst
+    // of events into a single reload after a short quiet period fixes this
+    // without losing "updates appear live for other users" behavior.
+    let reloadTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleReload = () => {
+      if (reloadTimer) clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => {
+        loadAllData();
+      }, 1500);
+    };
+
+    // Subscribe to artifact changes — updates appear live for all users
     const channel = supabase
       .channel("artifacts-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "artifacts" }, () => {
-        loadAllData();
+        scheduleReload();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "movement_logs" }, () => {
-        loadAllData();
+        scheduleReload();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "inspection_logs" }, () => {
-        loadAllData();
+        scheduleReload();
       })
       .subscribe();
 
     return () => {
+      if (reloadTimer) clearTimeout(reloadTimer);
       supabase.removeChannel(channel);
     };
   }, [currentUser?.id]);
