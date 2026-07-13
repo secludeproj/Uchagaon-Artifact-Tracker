@@ -5,6 +5,7 @@ import { Artifact, Staff, TeamActivity, Duty } from "./types";
 import { supabase } from "./lib/supabase";
 import { exportPhotoAlbumsByRoom } from "./lib/photoExport";
 import { PROPERTY_NAME, formatDisplayDate } from "./lib/propertyConfig";
+import { resolvePhotosForStorage } from "./lib/photoStorage";
 import {
   fetchAllArtifacts,
   insertArtifact,
@@ -381,8 +382,10 @@ subscription.unsubscribe();
   // Add/Edit form (with all its other required fields) for each one.
   const handleSavePhotos = async (itemId: string, photos: string[], description: string, name: string) => {
     try {
-      await updateArtifact(itemId, { photos, description, name }, { name: currentUser?.name || "", email: currentUser?.email || "" });
-      setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos, description, name } : a)));
+      const item = artifacts.find((a) => a.id === itemId);
+      const resolvedPhotos = await resolvePhotosForStorage(photos, item?.currentLocation || "unassigned", itemId);
+      await updateArtifact(itemId, { photos: resolvedPhotos, description, name }, { name: currentUser?.name || "", email: currentUser?.email || "" });
+      setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos: resolvedPhotos, description, name } : a)));
     } catch (err) {
       console.warn("Failed to save photos:", err);
       alert("Could not save this item's photos. Please check your connection and try again.");
@@ -434,12 +437,27 @@ subscription.unsubscribe();
     try {
       setIsLoading(true);
       if (isEdit) {
-        await updateArtifact(selectedItemId!, payload, user);
+        // Upload any newly-added photos (still base64 data URLs) to Storage
+        // room-wise before saving — existing Storage URLs pass through
+        // unchanged so they aren't re-uploaded every edit.
+        const resolvedPhotos = payload.photos
+          ? await resolvePhotosForStorage(payload.photos, payload.currentLocation || "unassigned", selectedItemId!)
+          : payload.photos;
+        const finalPayload = { ...payload, photos: resolvedPhotos };
+        await updateArtifact(selectedItemId!, finalPayload, user);
         await logActivity("edit", payload.name, selectedItemId!, `Updated artifact details`, { id: currentUser.id, ...user });
         await loadAllData();
         navigateToView("item-detail", selectedItemId!);
       } else {
-        const saved = await insertArtifact(payload, user);
+        // New items don't have an id yet, and photo storage paths are
+        // organized by artifact id — so insert first with photos empty,
+        // then upload using the real id, then attach the resulting URLs.
+        const { photos, ...payloadWithoutPhotos } = payload;
+        const saved = await insertArtifact({ ...payloadWithoutPhotos, photos: [] }, user);
+        if (photos && photos.length > 0) {
+          const resolvedPhotos = await resolvePhotosForStorage(photos, payload.currentLocation || "unassigned", saved.id);
+          await updateArtifact(saved.id, { photos: resolvedPhotos }, user);
+        }
         await logActivity("add", saved.name, saved.id, `Added new artifact to registry`, { id: currentUser.id, ...user });
         await loadAllData();
         navigateToView("item-detail", saved.id);
