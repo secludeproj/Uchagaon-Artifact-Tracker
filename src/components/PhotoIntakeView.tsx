@@ -7,10 +7,24 @@ import {
   ImageOff, Search, ClipboardList,
 } from "lucide-react";
 
+// Flags names that are just a bare, undecorated object word — the exact
+// output you get when the source data had no material, color, or feature
+// to build a specific name from. Not wrong, just worth a visual nudge to
+// fix while you're looking at the real item.
+const GENERIC_BARE_NAMES = new Set([
+  "sofa", "shelf", "pot", "table", "chair", "lamp", "vase", "jar", "urn",
+  "cupboard", "bed", "stool", "bench", "tray", "bowl", "cushion", "curtain",
+  "clock", "fan", "mirror", "wall frame", "carpet", "trunk", "kettle set",
+  "cups & glasses set", "dinnerware set", "hanger", "washbasin",
+]);
+function isGenericName(name: string): boolean {
+  return GENERIC_BARE_NAMES.has(name.trim().toLowerCase());
+}
+
 interface PhotoIntakeViewProps {
   artifacts: Artifact[];
   onBack: () => void;
-  onSavePhotos: (itemId: string, photos: string[], description: string) => Promise<void> | void;
+  onSavePhotos: (itemId: string, photos: string[], description: string, name: string) => Promise<void> | void;
 }
 
 // A streamlined, one-item-at-a-time photo intake screen — built specifically
@@ -19,12 +33,14 @@ interface PhotoIntakeViewProps {
 // section for every single one.
 export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: PhotoIntakeViewProps) {
   const [onlyMissing, setOnlyMissing] = useState(true);
+  const [onlyGeneric, setOnlyGeneric] = useState(false);
   const [search, setSearch] = useState("");
   const [index, setIndex] = useState(0);
   const [stagedPhotos, setStagedPhotos] = useState<string[] | null>(null);
   const [croppingIdx, setCroppingIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [stagedDescription, setStagedDescription] = useState<string | null>(null);
+  const [stagedName, setStagedName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,6 +49,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
   const queue = useMemo(() => {
     let list = artifacts;
     if (onlyMissing) list = list.filter(a => !a.photos || a.photos.length === 0);
+    if (onlyGeneric) list = list.filter(a => isGenericName(a.name));
     if (search.trim()) {
       const s = search.trim().toLowerCase();
       list = list.filter(a => a.name.toLowerCase().includes(s));
@@ -43,14 +60,19 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
       if (ai !== bi) return ai - bi;
       return a.name.localeCompare(b.name);
     });
-  }, [artifacts, onlyMissing, search, roomOrder]);
+  }, [artifacts, onlyMissing, onlyGeneric, search, roomOrder]);
 
   const current = queue[Math.min(index, queue.length - 1)];
   const workingPhotos = stagedPhotos ?? current?.photos ?? [];
   const workingDescription = stagedDescription ?? current?.description ?? "";
+  const workingName = stagedName ?? current?.name ?? "";
 
   const totalWithoutPhotos = useMemo(
     () => artifacts.filter(a => !a.photos || a.photos.length === 0).length,
+    [artifacts]
+  );
+  const totalGenericNames = useMemo(
+    () => artifacts.filter(a => isGenericName(a.name)).length,
     [artifacts]
   );
 
@@ -73,6 +95,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
   const goTo = (newIndex: number) => {
     setStagedPhotos(null);
     setStagedDescription(null);
+    setStagedName(null);
     setIndex(Math.max(0, Math.min(newIndex, queue.length - 1)));
   };
 
@@ -80,7 +103,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
     if (!current) return;
     setSaving(true);
     try {
-      await onSavePhotos(current.id, workingPhotos, workingDescription);
+      await onSavePhotos(current.id, workingPhotos, workingDescription, workingName);
     } finally {
       setSaving(false);
       // Don't just increment — once the parent's artifacts prop refreshes,
@@ -139,6 +162,10 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
           <input type="checkbox" checked={onlyMissing} onChange={(e) => { setOnlyMissing(e.target.checked); goTo(0); }} />
           Only items without a photo
         </label>
+        <label className="flex items-center gap-1.5 text-xs font-mono text-[#5c544d] cursor-pointer">
+          <input type="checkbox" checked={onlyGeneric} onChange={(e) => { setOnlyGeneric(e.target.checked); goTo(0); }} />
+          Only generic names ({totalGenericNames})
+        </label>
         <div className="flex items-center gap-1.5 flex-1 min-w-[160px]">
           <Search className="w-3.5 h-3.5 text-[#8e847a]" />
           <input
@@ -163,8 +190,20 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
       {/* Current item card */}
       <div className="bg-[#fdfcf7] border border-[#dcd6c8] rounded-lg shadow-sm p-5 space-y-4">
         <div>
-          <h3 className="font-serif text-lg font-bold text-[#1c1a18]">{current.name}</h3>
-          <p className="text-xs font-mono text-[#8e847a]">{current.currentLocation} • {current.category}</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={workingName}
+              onChange={(e) => setStagedName(e.target.value)}
+              className="font-serif text-lg font-bold text-[#1c1a18] bg-transparent border-b border-dashed border-[#c4beaf] focus:border-[#3b5249] focus:outline-none flex-1 py-0.5"
+            />
+            {isGenericName(workingName) && (
+              <span className="text-[9px] font-mono font-bold uppercase text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shrink-0">
+                Generic name
+              </span>
+            )}
+          </div>
+          <p className="text-xs font-mono text-[#8e847a] mt-1">{current.currentLocation} • {current.category}</p>
 
           {/* Extra identifying context — many bulk-imported names are
               generic ("Sofa", "Shelf", "Pot"), so this is what actually
@@ -263,7 +302,7 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
           </button>
           <button
             onClick={handleSaveAndNext}
-            disabled={saving || (workingPhotos.length === 0 && !workingDescription.trim())}
+            disabled={saving || (workingPhotos.length === 0 && !workingDescription.trim() && workingName.trim() === (current.name || "").trim())}
             className="flex-1 p-2 px-4 bg-[#3b5249] hover:bg-[#2c3d36] text-white rounded text-xs font-mono font-bold uppercase disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
           >
             {saving ? "Saving..." : <>Save & Next <ArrowRight className="w-3.5 h-3.5" /></>}

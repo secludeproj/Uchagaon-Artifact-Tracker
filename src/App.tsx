@@ -362,10 +362,10 @@ subscription.unsubscribe();
   // Saves photos and description for one item — used by Rapid Photo Intake
   // so working through hundreds of items doesn't require opening the full
   // Add/Edit form (with all its other required fields) for each one.
-  const handleSavePhotos = async (itemId: string, photos: string[], description: string) => {
+  const handleSavePhotos = async (itemId: string, photos: string[], description: string, name: string) => {
     try {
-      await updateArtifact(itemId, { photos, description }, { name: currentUser?.name || "", email: currentUser?.email || "" });
-      setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos, description } : a)));
+      await updateArtifact(itemId, { photos, description, name }, { name: currentUser?.name || "", email: currentUser?.email || "" });
+      setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos, description, name } : a)));
     } catch (err) {
       console.warn("Failed to save photos:", err);
       alert("Could not save this item's photos. Please check your connection and try again.");
