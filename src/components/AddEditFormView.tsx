@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { Artifact, MovementLog } from "../types";
 import { REAL_ROOMS, ROOMS_BY_BLOCK, blockForLocation } from "../lib/locations";
 import { buildCategoryList } from "../lib/categories";
+import PhotoCropModal from "./PhotoCropModal";
 import { 
   Camera, 
   Sparkles, 
@@ -12,7 +13,8 @@ import {
   CheckCircle,
   AlertTriangle,
   Upload,
-  RefreshCw
+  RefreshCw,
+  Crop
 } from "lucide-react";
 
 interface AddEditFormViewProps {
@@ -38,6 +40,7 @@ export default function AddEditFormView({
 
   // Form Fields State
   const [photos, setPhotos] = useState<string[]>(existingItem?.photos || []);
+  const [croppingIndex, setCroppingIndex] = useState<number | null>(null);
   const [name, setName] = useState(existingItem?.name || "");
   const [category, setCategory] = useState<Artifact["category"]>(existingItem?.category || "Other");
   const [description, setDescription] = useState(existingItem?.description || "");
@@ -665,6 +668,17 @@ export default function AddEditFormView({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setCroppingIndex(idx);
+                          }}
+                          className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-[#3b5249] hover:bg-[#2c3d36] text-white rounded-full flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-all"
+                          title="Crop / zoom photo"
+                        >
+                          <Crop className="w-2.5 h-2.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setPhotos((prev) => prev.filter((_, i) => i !== idx));
                           }}
                           className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] leading-none opacity-0 group-hover/thumb:opacity-100 transition-all"
@@ -1182,6 +1196,21 @@ export default function AddEditFormView({
           </div>
         )}
       </div>
+
+      {croppingIndex !== null && photos[croppingIndex] && (
+        <PhotoCropModal
+          imageSrc={photos[croppingIndex]}
+          onCancel={() => setCroppingIndex(null)}
+          onApply={(croppedDataUrl) => {
+            setPhotos((prev) => {
+              const next = [...prev];
+              next[croppingIndex] = croppedDataUrl;
+              return next;
+            });
+            setCroppingIndex(null);
+          }}
+        />
+      )}
     </div>
   );
 }
