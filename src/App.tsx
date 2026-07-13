@@ -37,6 +37,7 @@ import QRHubView from "./components/QRHubView";
 import ReconciliationReportView from "./components/ReconciliationReportView";
 import TeamView from "./components/TeamView";
 import StaffLogView from "./components/StaffLogView";
+import PhotoIntakeView from "./components/PhotoIntakeView";
 import QRScannerModal from "./components/QRScannerModal";
 import GuestStoryCardView from "./components/GuestStoryCardView";
 import EditProfileModal from "./components/EditProfileModal";
@@ -48,7 +49,7 @@ import SecludeLogo from "./components/SecludeLogo";
 import {
   Compass, Layers, MapPin, QrCode, FileText, Users,
   User as UserIcon, LogOut, Menu, X, Download, Sparkles,
-  FileSpreadsheet, Camera, Trash2, Shield, CalendarDays, ClipboardList
+  FileSpreadsheet, Camera, Trash2, Shield, CalendarDays, ClipboardList, ImagePlus
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -358,6 +359,19 @@ subscription.unsubscribe();
   // ── CRUD Operations ────────────────────────────────────────────────────────
 
   // ── Staff Duty Log handlers ────────────────────────────────────────────────
+  // Saves just the photos field for one item — used by Rapid Photo Intake
+  // so working through hundreds of items doesn't require opening the full
+  // Add/Edit form (with all its other required fields) for each one.
+  const handleSavePhotos = async (itemId: string, photos: string[]) => {
+    try {
+      await updateArtifact(itemId, { photos }, { name: currentUser?.name || "", email: currentUser?.email || "" });
+      setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos } : a)));
+    } catch (err) {
+      console.warn("Failed to save photos:", err);
+      alert("Could not save this item's photos. Please check your connection and try again.");
+    }
+  };
+
   const handleAddDuty = async (duty: {
     assignedToName: string;
     task: string;
@@ -734,6 +748,7 @@ subscription.unsubscribe();
               { id: "reconcile", label: "Lease Reconcile", icon: FileText },
               { id: "team", label: "Team Activities", icon: Users },
               { id: "stafflog", label: "Staff Duty Log", icon: ClipboardList },
+              { id: "photointake", label: "Rapid Photo Intake", icon: ImagePlus },
               { id: "admin", label: "Admin Panel", icon: Shield },
             ].filter(m => {
               if (m.id === "reconcile" || m.id === "team") {
@@ -807,6 +822,7 @@ subscription.unsubscribe();
                 { id: "reconcile", label: "Lease Reconcile", icon: FileText },
                 { id: "team", label: "Team Activities", icon: Users },
                 { id: "stafflog", label: "Staff Duty Log", icon: ClipboardList },
+              { id: "photointake", label: "Rapid Photo Intake", icon: ImagePlus },
                 { id: "admin", label: "Admin Panel", icon: Shield },
               ].filter(m => {
                 if (m.id === "reconcile" || m.id === "team") {
@@ -903,6 +919,13 @@ subscription.unsubscribe();
                 onAddDuty={handleAddDuty}
                 onUpdateStatus={handleUpdateDutyStatus}
                 onDeleteDuty={handleDeleteDuty}
+              />
+            )}
+            {activeView === "photointake" && (
+              <PhotoIntakeView
+                artifacts={artifacts}
+                onBack={() => navigateToView("dashboard")}
+                onSavePhotos={handleSavePhotos}
               />
             )}
             {activeView === "admin" && userRole === "SUPER_ADMIN" && (
