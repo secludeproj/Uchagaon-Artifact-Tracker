@@ -670,7 +670,7 @@ export default function AddEditFormView({
                             e.stopPropagation();
                             setCroppingIndex(idx);
                           }}
-                          className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-[#3b5249] hover:bg-[#2c3d36] text-white rounded-full flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-all"
+                          className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-[#3b5249] hover:bg-[#2c3d36] text-white rounded-full flex items-center justify-center transition-all"
                           title="Crop / zoom photo"
                         >
                           <Crop className="w-2.5 h-2.5" />
@@ -681,7 +681,7 @@ export default function AddEditFormView({
                             e.stopPropagation();
                             setPhotos((prev) => prev.filter((_, i) => i !== idx));
                           }}
-                          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] leading-none opacity-0 group-hover/thumb:opacity-100 transition-all"
+                          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] leading-none transition-all"
                           title="Remove photo"
                         >
                           ×
