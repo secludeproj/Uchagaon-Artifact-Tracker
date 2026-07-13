@@ -21,6 +21,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
   const [previewRows, setPreviewRows] = useState<any[]>([]);
   const [parseError, setParseError] = useState("");
   const [successCount, setSuccessCount] = useState<number | null>(null);
+  const [noHeaderDetected, setNoHeaderDetected] = useState(false);
 
   const sampleTemplate = `room,block,driveLink,name,category,subCategory,quantity,dimensions,material,estimatedAge,condition,estimatedValue,currentLocation,status,handlingNotes
 "Room 3","A Block — Main Haveli","https://drive.google.com/drive/folders/room3-example","Late Mughal Ivory Dagger","Weaponry & Armor","Dagger",1,"32cm length","Ivory, steel blade","approx. 220 years","Fair",18000,,"On Display","Handle with custom gloves"
@@ -36,6 +37,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
   const handleParseCsv = (rawText: string) => {
     setParseError("");
     setPreviewRows([]);
+    setNoHeaderDetected(false);
 
     if (!rawText.trim()) {
       setParseError("Please input CSV raw row-lines values first.");
@@ -43,9 +45,9 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
     }
 
     try {
-      const lines = rawText.split("\n");
-      if (lines.length < 2) {
-        setParseError("CSV input must contain at least a single header row and matching body values.");
+      const lines = rawText.split("\n").filter(l => l.trim());
+      if (lines.length < 1) {
+        setParseError("CSV input must contain at least one row of data.");
         return;
       }
 
@@ -69,13 +71,34 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
       const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ""));
       const parsedRows: any[] = [];
 
+      // The default schema column order, used when no header row is
+      // present at all — this is exactly the scenario of copying rows
+      // straight out of Excel (which has its own different column names)
+      // without ever typing/pasting our header line first. Requiring that
+      // every single time was a real, recurring point of friction.
+      const DEFAULT_COLUMN_ORDER = [
+        "room", "block", "driveLink", "name", "category", "subCategory",
+        "quantity", "dimensions", "material", "estimatedAge", "condition",
+        "estimatedValue", "currentLocation", "status", "handlingNotes",
+      ];
+
+      // A real header row should contain recognizable column-name tokens.
+      // If it doesn't, this "header" line is actually your first data row.
+      const looksLikeHeader = ["room", "name", "category"].every(tok =>
+        headers.some(h => h.trim().toLowerCase() === tok)
+      );
+
+      const effectiveHeaders = looksLikeHeader ? headers : DEFAULT_COLUMN_ORDER;
+      const dataStartIndex = looksLikeHeader ? 1 : 0;
+      setNoHeaderDetected(!looksLikeHeader);
+
       // Running "merged cell" state, carried down across rows until a new
       // explicit value appears in one of the forward-fill columns.
       let lastRoom = "";
       let lastBlock = "";
       let lastDriveLink = "";
 
-      for (let i = 1; i < lines.length; i++) {
+      for (let i = dataStartIndex; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
 
@@ -94,9 +117,9 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
         // separate rows instead of misreading it as one row with 30 extra
         // columns silently dropped.
         const chunks: string[][] = [];
-        if (rowValues.length > headers.length && rowValues.length % headers.length === 0) {
-          for (let c = 0; c < rowValues.length; c += headers.length) {
-            chunks.push(rowValues.slice(c, c + headers.length));
+        if (rowValues.length > effectiveHeaders.length && rowValues.length % effectiveHeaders.length === 0) {
+          for (let c = 0; c < rowValues.length; c += effectiveHeaders.length) {
+            chunks.push(rowValues.slice(c, c + effectiveHeaders.length));
           }
         } else {
           chunks.push(rowValues);
@@ -104,7 +127,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
 
         for (const chunkValues of chunks) {
         const rawRow: Record<string, string> = {};
-        headers.forEach((hdr, colIdx) => {
+        effectiveHeaders.forEach((hdr, colIdx) => {
           // Strip ALL leading/trailing quote or apostrophe characters, not
           // just one of each — Excel's "force text" marker can leave a
           // stray leading ' on any field, and some copy/paste paths wrap
@@ -272,6 +295,17 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
           <div className="p-3 bg-red-50 border border-red-150 rounded text-red-700 text-xs flex gap-1.5 items-center">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>{parseError}</span>
+          </div>
+        )}
+
+        {noHeaderDetected && previewRows.length > 0 && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded text-blue-800 text-xs flex gap-1.5 items-center">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              No header row detected — every line was read as data, assuming the default column order:{" "}
+              <code className="font-mono">room, block, driveLink, name, category, subCategory, quantity, dimensions, material, estimatedAge, condition, estimatedValue, currentLocation, status, handlingNotes</code>.
+              Check the preview below matches up correctly before committing. If your columns are in a different order, add the header line to the top of your paste instead.
+            </span>
           </div>
         )}
 
