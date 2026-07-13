@@ -84,9 +84,35 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
         // blanks).
         const rowValues = splitCsvLine(line, delimiter);
 
+        // Recovery for a real, recurring copy/paste failure: sometimes the
+        // line break between rows gets lost somewhere in the copy path
+        // (pasting from Excel through certain clipboard managers, or into
+        // a chat box that eats newlines), so several rows end up flattened
+        // onto one single line. If the column count here is a clean, exact
+        // multiple of the header count — e.g. 45 values when there are 15
+        // headers, meaning 3 rows worth — split it back into that many
+        // separate rows instead of misreading it as one row with 30 extra
+        // columns silently dropped.
+        const chunks: string[][] = [];
+        if (rowValues.length > headers.length && rowValues.length % headers.length === 0) {
+          for (let c = 0; c < rowValues.length; c += headers.length) {
+            chunks.push(rowValues.slice(c, c + headers.length));
+          }
+        } else {
+          chunks.push(rowValues);
+        }
+
+        for (const chunkValues of chunks) {
         const rawRow: Record<string, string> = {};
         headers.forEach((hdr, colIdx) => {
-          rawRow[hdr] = (rowValues[colIdx] ?? "").trim().replace(/^["']|["']$/g, "");
+          // Strip ALL leading/trailing quote or apostrophe characters, not
+          // just one of each — Excel's "force text" marker can leave a
+          // stray leading ' on any field, and some copy/paste paths wrap
+          // fields in "..." even when there's no comma inside needing it.
+          // A single-character strip (the old /^["']|["']$/ pattern) missed
+          // cases with more than one wrapping character.
+          const raw = (chunkValues[colIdx] ?? "").trim();
+          rawRow[hdr] = raw.replace(/^["']+/, "").replace(/["']+$/, "").trim();
         });
 
         // ── Forward-fill room / block / driveLink ──────────────────────────
@@ -170,6 +196,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
         };
 
         parsedRows.push(rowObj);
+        } // end chunk loop
       }
 
       setPreviewRows(parsedRows);
@@ -376,7 +403,9 @@ function splitCsvLine(line: string, delimiter: string | RegExp = ","): string[] 
     // Excel wrapped in quotes (which it does for values containing special
     // characters, or sometimes just inconsistently) kept its literal " "
     // characters instead of having them stripped like the comma/tab path does.
-    return line.trim().split(delimiter).map(v => v.trim().replace(/^"(.*)"$/, "$1"));
+    return line.trim().split(delimiter).map(v =>
+      v.trim().replace(/^["']+/, "").replace(/["']+$/, "").trim()
+    );
   }
 
   const result: string[] = [];
