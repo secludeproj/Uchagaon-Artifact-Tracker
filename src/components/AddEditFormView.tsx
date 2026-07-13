@@ -3,6 +3,7 @@ import { Artifact, MovementLog } from "../types";
 import { REAL_ROOMS, ROOMS_BY_BLOCK, blockForLocation } from "../lib/locations";
 import { buildCategoryList } from "../lib/categories";
 import PhotoCropModal from "./PhotoCropModal";
+import { deletePhotoFromStorage } from "../lib/photoStorage";
 import { 
   Camera, 
   Sparkles, 
@@ -679,7 +680,9 @@ export default function AddEditFormView({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            const removedUrl = photos[idx];
                             setPhotos((prev) => prev.filter((_, i) => i !== idx));
+                            deletePhotoFromStorage(removedUrl).catch((err) => console.warn("Failed to delete photo from storage:", err));
                           }}
                           className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-[10px] leading-none transition-all"
                           title="Remove photo"
@@ -1202,11 +1205,13 @@ export default function AddEditFormView({
           imageSrc={photos[croppingIndex]}
           onCancel={() => setCroppingIndex(null)}
           onApply={(croppedDataUrl) => {
+            const replacedUrl = photos[croppingIndex];
             setPhotos((prev) => {
               const next = [...prev];
               next[croppingIndex] = croppedDataUrl;
               return next;
             });
+            deletePhotoFromStorage(replacedUrl).catch((err) => console.warn("Failed to delete old photo from storage:", err));
             setCroppingIndex(null);
           }}
         />

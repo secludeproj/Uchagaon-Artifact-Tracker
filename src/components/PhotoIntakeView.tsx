@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useCallback } from "react";
 import { Artifact } from "../types";
 import { REAL_ROOMS } from "../lib/locations";
 import PhotoCropModal from "./PhotoCropModal";
+import { deletePhotoFromStorage } from "../lib/photoStorage";
 import {
   Camera, Upload, Crop, ArrowRight, ArrowLeft, SkipForward,
   ImageOff, Search, ClipboardList,
@@ -250,7 +251,11 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStagedPhotos(workingPhotos.filter((_, idx) => idx !== i))}
+                  onClick={() => {
+                    const removedUrl = workingPhotos[i];
+                    setStagedPhotos(workingPhotos.filter((_, idx) => idx !== i));
+                    deletePhotoFromStorage(removedUrl).catch((err) => console.warn("Failed to delete photo from storage:", err));
+                  }}
                   className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-xs leading-none"
                   title="Remove"
                 >
@@ -315,9 +320,11 @@ export default function PhotoIntakeView({ artifacts, onBack, onSavePhotos }: Pho
           imageSrc={workingPhotos[croppingIdx]}
           onCancel={() => setCroppingIdx(null)}
           onApply={(cropped) => {
+            const replacedUrl = workingPhotos[croppingIdx];
             const next = [...workingPhotos];
             next[croppingIdx] = cropped;
             setStagedPhotos(next);
+            deletePhotoFromStorage(replacedUrl).catch((err) => console.warn("Failed to delete old photo from storage:", err));
             setCroppingIdx(null);
           }}
         />

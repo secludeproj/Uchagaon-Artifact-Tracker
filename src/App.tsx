@@ -5,7 +5,7 @@ import { Artifact, Staff, TeamActivity, Duty } from "./types";
 import { supabase } from "./lib/supabase";
 import { exportPhotoAlbumsByRoom } from "./lib/photoExport";
 import { PROPERTY_NAME, formatDisplayDate } from "./lib/propertyConfig";
-import { resolvePhotosForStorage } from "./lib/photoStorage";
+import { resolvePhotosForStorage, deletePhotoFromStorage } from "./lib/photoStorage";
 import {
   fetchAllArtifacts,
   insertArtifact,
@@ -532,6 +532,12 @@ subscription.unsubscribe();
     try {
       setIsLoading(true);
       await deleteArtifact(itemToDeleteId);
+      // Clean up this item's photos from Storage too, so deleting an
+      // artifact doesn't leave orphaned files behind — this matters once
+      // you're at hundreds of items rather than a dozen.
+      if (artifact?.photos?.length) {
+        await Promise.all(artifact.photos.map((url) => deletePhotoFromStorage(url).catch((err) => console.warn("Failed to delete photo from storage:", err))));
+      }
       await logActivity("delete", artifact?.name || itemToDeleteId, itemToDeleteId,
         "Artifact withdrawn from registry",
         { id: currentUser.id, name: currentUser.name, email: currentUser.email }
