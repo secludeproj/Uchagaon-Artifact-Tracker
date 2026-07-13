@@ -124,6 +124,26 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
         // ── Optional-with-defaults fields ──────────────────────────────────
         const quantityNum = parseInt(rawRow.quantity, 10);
 
+        // The database only accepts a fixed set of condition values. Bulk
+        // import previously passed whatever text was in the CSV straight
+        // through — if even one row out of hundreds had something outside
+        // that list (a stray value like "Needs Cleaning", or a leftover
+        // Excel force-text quote mark), the *entire* batch insert failed,
+        // not just that row. Normalize it here instead, and keep the
+        // original text as a handling note rather than silently losing it.
+        const rawCondition = (rawRow.condition || "").replace(/^'+|'+$/g, "").trim();
+        const VALID_CONDITIONS = ["mint", "good", "fair", "poor", "damaged", "not assessed"];
+        let resolvedCondition = FIELD_DEFAULTS.condition;
+        let conditionNote = "";
+        if (rawCondition) {
+          const match = VALID_CONDITIONS.find(v => v === rawCondition.toLowerCase());
+          if (match) {
+            resolvedCondition = match.replace(/\b\w/g, c => c.toUpperCase());
+          } else {
+            conditionNote = `Original condition note: "${rawCondition}"`;
+          }
+        }
+
         const rowObj: Record<string, any> = {
           name: rawRow.name || "",
           category: rawRow.category || "",
@@ -132,12 +152,12 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
           dimensions: rawRow.dimensions || "",
           material: rawRow.material || "",
           estimatedAge: rawRow.estimatedAge || FIELD_DEFAULTS.estimatedAge,
-          condition: rawRow.condition || FIELD_DEFAULTS.condition,
+          condition: resolvedCondition,
           estimatedValue: rawRow.estimatedValue ? Number(rawRow.estimatedValue) || 0 : null,
           originalLocation,
           currentLocation,
           status: rawRow.status || FIELD_DEFAULTS.status,
-          handlingNotes: rawRow.handlingNotes || "",
+          handlingNotes: [rawRow.handlingNotes || "", conditionNote].filter(Boolean).join(" | "),
           driveLink: resolvedDriveLink || undefined,
 
           // Preview-only bookkeeping — stripped before the actual DB insert.
@@ -145,6 +165,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
           _block: resolvedBlock,
           _inherited: inherited,
           _blockMismatch: blockMismatch,
+          _conditionNormalized: !!conditionNote,
           _actualBlock: actualBlock,
         };
 
@@ -162,7 +183,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
 
     // Strip the preview-only helper fields before handing rows off to the
     // actual Supabase insert path.
-    const cleanRows = previewRows.map(({ _room, _block, _inherited, _blockMismatch, _actualBlock, ...rest }) => rest);
+    const cleanRows = previewRows.map(({ _room, _block, _inherited, _blockMismatch, _actualBlock, _conditionNormalized, ...rest }) => rest);
 
     onImportSuccess(cleanRows);
     setSuccessCount(cleanRows.length);
@@ -171,6 +192,7 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
   };
 
   const mismatchCount = previewRows.filter(r => r._blockMismatch).length;
+  const conditionNormalizedCount = previewRows.filter(r => r._conditionNormalized).length;
 
   return (
     <div className="bg-[#fdfcf7] border border-[#dcd6c8] rounded shadow-lg overflow-hidden max-w-4xl mx-auto">
@@ -231,6 +253,15 @@ export default function BulkImportView({ onImportSuccess, onCancel }: BulkImport
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>
               {mismatchCount} row{mismatchCount === 1 ? "" : "s"} list a <code className="font-mono">block</code> that doesn't match the room's actual block — check the ⚠ marked rows below. Import isn't blocked, just flagged for your review.
+            </span>
+          </div>
+        )}
+
+        {conditionNormalizedCount > 0 && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded text-amber-800 text-xs flex gap-1.5 items-center">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              {conditionNormalizedCount} row{conditionNormalizedCount === 1 ? "" : "s"} had a <code className="font-mono">condition</code> value the database doesn't accept (e.g. "Needs Cleaning" instead of Mint/Good/Fair/Poor/Damaged) — set to "Not Assessed" and the original text kept in that row's handling notes so nothing is lost.
             </span>
           </div>
         )}

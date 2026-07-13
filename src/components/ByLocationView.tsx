@@ -20,8 +20,18 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
       groups[room] = [];
     });
 
+    // Case/whitespace-insensitive lookup so a location that's semantically
+    // the same room (differing only by trimming, casing, or an encoding
+    // artifact from a copy/paste) lands in the real room bucket instead of
+    // silently creating a separate near-duplicate group — which is exactly
+    // what made pre-seeded rooms look empty even when items existed for them.
+    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    const normalizedRoomMap = new Map(REAL_ROOMS.map(r => [normalize(r), r]));
+
     artifacts.forEach((item) => {
-      const loc = item.currentLocation || "Unassigned Reception Room";
+      const rawLoc = item.currentLocation || "Unassigned Reception Room";
+      const canonical = normalizedRoomMap.get(normalize(rawLoc));
+      const loc = canonical || rawLoc;
       if (!groups[loc]) {
         groups[loc] = [];
       }
