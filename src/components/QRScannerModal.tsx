@@ -298,22 +298,23 @@ export default function QRScannerModal({ isOpen, onClose, artifacts, onNavigate 
                     {hasPermission && (
                       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                         {/* Scanning Box Outline */}
-                        <div className="w-48 h-48 border-2 border-dashed border-[#dfd6be]/40 relative flex items-center justify-center">
-                          
+                        <div className="w-48 h-48 border-2 border-dashed border-[#dfd6be]/40 relative flex items-center justify-center overflow-hidden">
+
                           {/* Precise neon retro framing brackets */}
                           <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-emerald-500 rounded-tl" />
                           <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-emerald-500 rounded-tr" />
                           <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-emerald-500 rounded-bl" />
                           <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-emerald-500 rounded-br" />
 
+                          {/* Animated laser sweep — positioned relative to this box, not the
+                              outer video container, so it stays confined to the scan target */}
+                          <div className="absolute left-0 right-0 h-0.5 bg-emerald-500/80 shadow-[0_0_10px_#10b981] animate-scan-sweep" />
+
                           {/* Pulsing scanning text */}
-                          <span className="text-[9px] font-mono font-bold tracking-widest text-emerald-400 uppercase bg-black/60 px-2 py-0.5 rounded animate-pulse">
+                          <span className="relative text-[9px] font-mono font-bold tracking-widest text-emerald-400 uppercase bg-black/60 px-2 py-0.5 rounded animate-pulse">
                             Tracking Live
                           </span>
                         </div>
-
-                        {/* Animated Laser sweeping grid */}
-                        <div className="absolute left-1/2 -translate-x-1/2 w-48 h-1 bg-emerald-500/80 shadow-[0_0_10px_#10b981] animate-bounce top-[25%] bottom-[25%]" style={{ animationDuration: '2.5s' }} />
                       </div>
                     )}
 

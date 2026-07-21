@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Artifact, MovementLog } from "../types";
+import { sameRoom } from "../lib/locations";
 import {
   ArrowLeft,
   ClipboardCheck,
@@ -71,6 +72,7 @@ function conditionTrend(prev: string | undefined, curr: string): "up" | "down" |
 export default function ConservationTimelineView({ item, onBack }: ConservationTimelineViewProps) {
   const [filterType, setFilterType] = useState<"all" | TimelineEventType>("all");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const isReturnedToOrigin = sameRoom(item.currentLocation, item.originalLocation);
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev: Set<string>) => {
@@ -465,11 +467,11 @@ export default function ConservationTimelineView({ item, onBack }: ConservationT
 
       {/* ── Leasehold Return Status Footer ── */}
       <div className={`p-4 rounded-lg border text-xs font-sans flex items-start gap-3 ${
-        item.currentLocation === item.originalLocation
+        isReturnedToOrigin
           ? "bg-emerald-50 border-emerald-200 text-emerald-900"
           : "bg-amber-50 border-amber-200 text-amber-900"
       }`}>
-        {item.currentLocation === item.originalLocation
+        {isReturnedToOrigin
           ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
           : <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         }
@@ -477,7 +479,7 @@ export default function ConservationTimelineView({ item, onBack }: ConservationT
           <p className="font-mono font-bold uppercase text-[10px] tracking-wider mb-1">
             Lease Return Status
           </p>
-          {item.currentLocation === item.originalLocation ? (
+          {isReturnedToOrigin ? (
             <p>This artifact is currently positioned at its <strong>mandatory lease-return origin</strong>: <em>{item.originalLocation}</em>. Compliant with trust legislation.</p>
           ) : (
             <p>This artifact is <strong>not at its registered origin</strong>. Mandatory return location is <em>{item.originalLocation}</em>, but it is currently in <em>{item.currentLocation}</em>. A relocation must be arranged before lease-end.</p>

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Artifact } from "../types";
 import { Compass, Sparkles, BookOpen } from "lucide-react";
-import { supabase } from "../lib/supabase";
-import { fetchAllArtifacts } from "../lib/db";
+import { fetchGuestArtifact, GuestArtifact } from "../lib/db";
 import SecludeLogo from "./SecludeLogo";
 
 interface GuestStoryCardViewProps {
@@ -10,7 +8,7 @@ interface GuestStoryCardViewProps {
 }
 
 export default function GuestStoryCardView({ itemId }: GuestStoryCardViewProps) {
-  const [item, setItem] = useState<Artifact | null>(null);
+  const [item, setItem] = useState<GuestArtifact | null>(null);
   const [storyText, setStoryText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -19,9 +17,8 @@ export default function GuestStoryCardView({ itemId }: GuestStoryCardViewProps) 
     async function loadStory() {
       try {
         setLoading(true);
-        // Fetch directly from Supabase — no server needed
-        const artifacts = await fetchAllArtifacts();
-        const found = artifacts.find(a => a.id === itemId || a.qrCode === itemId);
+        // Public, unauthenticated lookup — no session needed for guests.
+        const found = await fetchGuestArtifact(itemId);
         if (!found) {
           throw new Error(`Item ${itemId} not found in registry`);
         }

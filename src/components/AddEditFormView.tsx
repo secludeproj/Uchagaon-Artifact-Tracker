@@ -24,14 +24,16 @@ interface AddEditFormViewProps {
   currentUser: { name: string; email: string; role: string };
   onSave: (artifact: any) => void;
   onCancel: () => void;
+  onGoToBulkImport?: () => void;
 }
 
-export default function AddEditFormView({ 
-  editItemId, 
-  artifacts, 
+export default function AddEditFormView({
+  editItemId,
+  artifacts,
   currentUser,
-  onSave, 
-  onCancel 
+  onSave,
+  onCancel,
+  onGoToBulkImport
 }: AddEditFormViewProps) {
   const isEditMode = !!editItemId;
   const existingItem = isEditMode ? artifacts.find((a) => a.id === editItemId) : null;
@@ -532,6 +534,21 @@ export default function AddEditFormView({
           Spatial Allocation
         </button>
       </div>
+
+      {!isEditMode && step === 1 && onGoToBulkImport && (
+        <div className="mx-6 mt-4 p-3 bg-[#eae5d9]/60 border border-[#dcd6c8] rounded flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-[11px] text-[#5c544d] font-sans">
+            <span className="font-bold text-[#3b5249]">Adding many items at once?</span> Paste a CSV/spreadsheet instead of filling this form one item at a time.
+          </p>
+          <button
+            type="button"
+            onClick={onGoToBulkImport}
+            className="text-[10px] font-mono font-bold uppercase text-[#3b5249] border border-[#3b5249] hover:bg-[#3b5249] hover:text-white rounded px-3 py-1.5 shrink-0 cursor-pointer transition-all"
+          >
+            Use Bulk Import Instead
+          </button>
+        </div>
+      )}
 
       <div className="p-6">
         {/* ======================= STEP 1: Vision Photo Scan ======================= */}

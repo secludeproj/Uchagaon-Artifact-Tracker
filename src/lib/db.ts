@@ -113,6 +113,44 @@ export async function fetchAllArtifacts(): Promise<Artifact[]> {
   );
 }
 
+// Public, unauthenticated lookup for the QR-scan guest story card — reads
+// only from the narrow `guest_artifacts` view (safe columns only) rather
+// than the full artifacts table, since anon visitors have no session.
+export interface GuestArtifact {
+  id: string;
+  qrCode: string;
+  name: string;
+  category: string;
+  description: string;
+  estimatedAge: string;
+  material: string;
+  dimensions: string;
+  photos: string[];
+  story: string;
+}
+
+export async function fetchGuestArtifact(lookup: string): Promise<GuestArtifact | null> {
+  const { data, error } = await supabase
+    .from('guest_artifacts')
+    .select('*')
+    .or(`id.eq.${lookup},qr_code.eq.${lookup}`)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return {
+    id: data.id,
+    qrCode: data.qr_code,
+    name: data.name,
+    category: data.category,
+    description: data.description,
+    estimatedAge: data.estimated_age,
+    material: data.material,
+    dimensions: data.dimensions,
+    photos: data.photos || [],
+    story: data.story,
+  };
+}
+
 export async function insertArtifact(
   payload: Partial<Artifact>,
   user: { name: string; email: string }

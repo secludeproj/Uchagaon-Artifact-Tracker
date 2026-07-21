@@ -4,3 +4,5 @@ dist
 .env.local
 *.log
 .DS_Store
+PROJECT_BRIEF.md
+.claude/settings.local.json

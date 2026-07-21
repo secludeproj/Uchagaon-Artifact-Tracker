@@ -35,6 +35,7 @@ import ItemDetailView from "./components/ItemDetailView";
 import AddEditFormView from "./components/AddEditFormView";
 import BulkImportView from "./components/BulkImportView";
 import QRHubView from "./components/QRHubView";
+import GuestStoryQRHubView from "./components/GuestStoryQRHubView";
 import ReconciliationReportView from "./components/ReconciliationReportView";
 import TeamView from "./components/TeamView";
 import StaffLogView from "./components/StaffLogView";
@@ -50,7 +51,8 @@ import SecludeLogo from "./components/SecludeLogo";
 import {
   Compass, Layers, MapPin, QrCode, FileText, Users,
   User as UserIcon, LogOut, Menu, X, Download, Sparkles,
-  FileSpreadsheet, Camera, Trash2, Shield, CalendarDays, ClipboardList, ImagePlus
+  FileSpreadsheet, Camera, Trash2, Shield, CalendarDays, ClipboardList, ImagePlus,
+  BookOpen
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -390,6 +392,13 @@ subscription.unsubscribe();
       console.warn("Failed to save photos:", err);
       alert("Could not save this item's photos. Please check your connection and try again.");
     }
+  };
+
+  // Quick story/description edit from the Guest Story QR Hub — same
+  // lightweight pattern as handleSavePhotos, no full Add/Edit form needed.
+  const handleUpdateStory = async (itemId: string, patch: { story: string; description: string }) => {
+    await updateArtifact(itemId, patch, { name: currentUser?.name || "", email: currentUser?.email || "" });
+    setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, ...patch } : a)));
   };
 
   const handleAddDuty = async (duty: {
@@ -863,6 +872,8 @@ subscription.unsubscribe();
                 { id: "location", label: "By Location", icon: MapPin },
                 { id: "conservation", label: "Conservation Schedule", icon: CalendarDays },
                 { id: "qrhub", label: "QR Label Hub", icon: QrCode },
+                { id: "guestqrhub", label: "Guest Story QR Hub", icon: BookOpen },
+                { id: "bulk", label: "Bulk Import (CSV)", icon: FileSpreadsheet },
                 { id: "reconcile", label: "Lease Reconcile", icon: FileText },
                 { id: "team", label: "Team Activities", icon: Users },
                 { id: "stafflog", label: "Staff Duty Log", icon: ClipboardList },
@@ -875,7 +886,7 @@ subscription.unsubscribe();
                 if (m.id === "admin") {
                   return userRole === "SUPER_ADMIN";
                 }
-                if (m.id === "photointake") {
+                if (m.id === "photointake" || m.id === "bulk") {
                   return !isOwnerView;
                 }
                 return true;
@@ -948,6 +959,14 @@ subscription.unsubscribe();
             {activeView === "qrhub" && (
               <QRHubView artifacts={artifacts} onBack={() => navigateToView("dashboard")} />
             )}
+            {activeView === "guestqrhub" && (
+              <GuestStoryQRHubView
+                artifacts={artifacts}
+                onBack={() => navigateToView("dashboard")}
+                canEditStory={!isOwnerView}
+                onUpdateStory={handleUpdateStory}
+              />
+            )}
             {activeView === "reconcile" && (
               <ReconciliationReportView artifacts={artifacts} onBack={() => navigateToView("dashboard")} />
             )}
@@ -992,7 +1011,8 @@ subscription.unsubscribe();
             )}
             {activeView === "add" && (
               <AddEditFormView artifacts={artifacts} currentUser={currentUser}
-                onSave={handleSaveItem} onCancel={() => navigateToView("dashboard")} />
+                onSave={handleSaveItem} onCancel={() => navigateToView("dashboard")}
+                onGoToBulkImport={() => navigateToView("bulk")} />
             )}
             {activeView === "edit" && selectedItemId && (
               <AddEditFormView editItemId={selectedItemId} artifacts={artifacts} currentUser={currentUser}

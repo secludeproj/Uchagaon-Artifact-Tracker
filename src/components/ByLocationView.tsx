@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Artifact } from "../types";
 import { MapPin, ArrowRight, Layers, Eye } from "lucide-react";
-import { REAL_ROOMS, blockForLocation } from "../lib/locations";
+import { REAL_ROOMS, blockForLocation, canonicalizeRoomName, sameRoom } from "../lib/locations";
 
 interface ByLocationViewProps {
   artifacts: Artifact[];
@@ -25,13 +25,9 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
     // artifact from a copy/paste) lands in the real room bucket instead of
     // silently creating a separate near-duplicate group — which is exactly
     // what made pre-seeded rooms look empty even when items existed for them.
-    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
-    const normalizedRoomMap = new Map(REAL_ROOMS.map(r => [normalize(r), r]));
-
     artifacts.forEach((item) => {
       const rawLoc = item.currentLocation || "Unassigned Reception Room";
-      const canonical = normalizedRoomMap.get(normalize(rawLoc));
-      const loc = canonical || rawLoc;
+      const loc = canonicalizeRoomName(rawLoc);
       if (!groups[loc]) {
         groups[loc] = [];
       }
@@ -113,7 +109,7 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
                         <span>
                           Original return match rate:{" "}
                           <span className="font-bold text-[#3b5249]">
-                            {items.filter((i) => i.currentLocation === i.originalLocation).length} / {items.length} matched
+                            {items.filter((i) => sameRoom(i.currentLocation, i.originalLocation)).length} / {items.length} matched
                           </span>
                         </span>
                         <span className="h-4 w-px bg-[#c4bcae]"></span>
@@ -130,7 +126,7 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
                 {/* Group Items Grid */}
                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                   {items.map((item) => {
-                    const isReturnedToOrigin = item.currentLocation === item.originalLocation;
+                    const isReturnedToOrigin = sameRoom(item.currentLocation, item.originalLocation);
                     return (
                       <div
                         key={item.id}

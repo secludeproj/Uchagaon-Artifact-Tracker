@@ -19,3 +19,14 @@ export function daysSinceLeaseStart(): number {
   const diffMs = now.getTime() - start.getTime();
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
+
+// The public, unauthenticated QR-scan URL for an artifact's guest story
+// card. Shared by every place that generates or prints a guest-story QR
+// (ItemDetailView's single-item placard, the Guest Story QR Hub) so the
+// URL format only has to be right in one place.
+export function getPublicStoryUrl(item: { id: string; qrCode?: string }): string {
+  if (item.qrCode && (item.qrCode.startsWith("http://") || item.qrCode.startsWith("https://"))) {
+    return item.qrCode;
+  }
+  return `${window.location.origin}/?storyId=${item.id}`;
+}
