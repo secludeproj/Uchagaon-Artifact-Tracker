@@ -11,12 +11,16 @@ export async function signInWithGoogle() {
     options: {
       redirectTo: window.location.origin,
       // Read-only Drive access lets the Photo Import feature pull room
-      // photos straight from each room's linked Drive folder. Google shows
-      // the extra permission prompt once, the first time a given account
-      // grants it — existing sessions need a fresh sign-in to pick it up.
+      // photos straight from each room's linked Drive folder. Without
+      // prompt: 'consent', Google silently reuses a prior sign-in and never
+      // actually asks for this scope, so the granted token ends up missing
+      // it (shows up later as a 403 "insufficient authentication scopes"
+      // from the Drive API) — forcing consent every sign-in is the
+      // trade-off that makes the scope reliably get granted.
       scopes: 'https://www.googleapis.com/auth/drive.readonly',
       queryParams: {
         access_type: 'offline',
+        prompt: 'consent',
       },
     },
   });
