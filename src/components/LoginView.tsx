@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { signInWithGoogle } from "../lib/auth";
 import { Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import SecludeLogo from "./SecludeLogo";
 
@@ -19,11 +20,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
     setIsLoading(true);
     setAuthError(null);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin },
-      });
-      if (error) throw error;
+      await signInWithGoogle();
     } catch (err: any) {
       setAuthError(err.message || "Google sign-in failed. Please try again.");
     } finally {
