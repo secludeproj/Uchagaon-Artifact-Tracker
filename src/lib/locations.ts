@@ -40,12 +40,36 @@ const NORMALIZED_ROOM_MAP: Map<string, string> = new Map(
   REAL_ROOMS.map((r) => [normalizeRoomName(r), r])
 );
 
+// Longest-name-first so a prefix match always picks the most specific real
+// room — e.g. against "Room 3" and "Room 31", "room 31 window seat" must
+// match "Room 31", not incorrectly match "Room 3" first.
+const REAL_ROOMS_BY_LENGTH_DESC = [...REAL_ROOMS].sort((a, b) => b.length - a.length);
+
 // Given any raw location string, returns the canonical REAL_ROOMS spelling
-// if it matches one case/whitespace-insensitively, otherwise returns the
-// trimmed input unchanged (e.g. a genuinely custom-typed location).
+// if it matches one, otherwise returns the trimmed input unchanged (e.g. a
+// genuinely custom-typed location). Two passes:
+//  1. Exact match, case/whitespace-insensitive ("SUN Room" -> "Sun Room").
+//  2. Prefix match on a word boundary — a real room name can be followed by
+//     extra descriptive text someone added to tell sub-areas apart at a
+//     glance ("Room 3 Main Room", "ROOM 4   BEDROOM"), but it's still
+//     physically the same room, so it should group as one. The boundary
+//     check (must be followed by a space, not another character) is what
+//     stops "Room 1" from swallowing "Room 10", or "Room 3" from swallowing
+//     "Room 31"/"Room 32"/etc.
 export function canonicalizeRoomName(location: string): string {
   const raw = (location || "").trim();
-  return NORMALIZED_ROOM_MAP.get(normalizeRoomName(raw)) || raw;
+  if (!raw) return raw;
+  const normalized = normalizeRoomName(raw);
+
+  const exact = NORMALIZED_ROOM_MAP.get(normalized);
+  if (exact) return exact;
+
+  for (const room of REAL_ROOMS_BY_LENGTH_DESC) {
+    const normalizedRoom = normalizeRoomName(room);
+    if (normalized.startsWith(normalizedRoom + " ")) return room;
+  }
+
+  return raw;
 }
 
 // Given any location string (real room or a custom-typed one), returns which
