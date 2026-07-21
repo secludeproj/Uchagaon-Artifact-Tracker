@@ -41,16 +41,54 @@ export async function listImagesInFolder(folderId: string, accessToken: string):
   return data.files || [];
 }
 
-export async function fetchDriveImageAsDataUrl(fileId: string, accessToken: string): Promise<string> {
-  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-  const res = await driveFetch(url, accessToken);
-  const blob = await res.blob();
+function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+// Camera-original Drive photos can be several MB each — multiple times
+// larger than the ~150-200KB photos the app's own crop tool produces.
+// Every extra byte stored gets re-served (and re-metered against Supabase's
+// free-tier egress) on every future view, so downscale before it ever
+// reaches Storage. 1600px on the longer side keeps items clearly
+// identifiable while cutting typical file size by 80%+.
+const MAX_DIMENSION = 1600;
+const JPEG_QUALITY = 0.85;
+
+async function downscaleDataUrl(dataUrl: string): Promise<string> {
+  const img = new Image();
+  const loaded = new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("Could not decode image for resizing"));
+  });
+  img.src = dataUrl;
+  await loaded;
+
+  const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(img.width * scale);
+  canvas.height = Math.round(img.height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return dataUrl; // fall back to the original rather than fail the import
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+}
+
+export async function fetchDriveImageAsDataUrl(fileId: string, accessToken: string): Promise<string> {
+  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+  const res = await driveFetch(url, accessToken);
+  const blob = await res.blob();
+  const dataUrl = await blobToDataUrl(blob);
+  try {
+    return await downscaleDataUrl(dataUrl);
+  } catch (err) {
+    console.warn("Downscale failed, using original image:", err);
+    return dataUrl;
+  }
 }
 
 // Best-effort name similarity so a likely match is pre-selected for review —

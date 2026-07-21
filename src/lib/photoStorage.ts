@@ -46,6 +46,13 @@ export async function uploadPhotoToStorage(
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
     contentType: blob.type,
     upsert: true,
+    // Photos are re-uploaded under a new timestamped filename whenever they
+    // change (see the path above), so a stale long-lived cache is never a
+    // correctness problem — only ever a speed/egress win. Without this,
+    // Supabase's short default meant every repeat view re-downloaded
+    // unchanged photos from Storage, which is exactly what burns through
+    // free-tier egress fastest as the collection grows.
+    cacheControl: "31536000",
   });
   if (error) throw error;
 

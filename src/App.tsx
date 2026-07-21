@@ -411,13 +411,14 @@ subscription.unsubscribe();
     setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, ...patch } : a)));
   };
 
-  // Appends one photo (as a data URL) to an item's existing photos — used
-  // by Drive Photo Import so pulling a photo in from Drive doesn't clobber
-  // whatever photos the item already has.
-  const handleAppendPhoto = async (itemId: string, newPhotoDataUrl: string) => {
+  // Appends one or more photos (as data URLs) to an item's existing photos
+  // — used by Drive Photo Import so pulling photos in from Drive doesn't
+  // clobber whatever the item already has. Batched into a single Storage
+  // upload pass + DB write per item, regardless of how many were selected.
+  const handleAppendPhotos = async (itemId: string, newPhotoDataUrls: string[]) => {
     const item = artifacts.find((a) => a.id === itemId);
     if (!item) return;
-    const updatedPhotos = [...(item.photos || []), newPhotoDataUrl];
+    const updatedPhotos = [...(item.photos || []), ...newPhotoDataUrls];
     const resolvedPhotos = await resolvePhotosForStorage(updatedPhotos, item.currentLocation || "unassigned", itemId);
     await updateArtifact(itemId, { photos: resolvedPhotos }, { name: currentUser?.name || "", email: currentUser?.email || "" });
     setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos: resolvedPhotos } : a)));
@@ -995,7 +996,7 @@ subscription.unsubscribe();
                 artifacts={artifacts}
                 onBack={() => navigateToView("dashboard")}
                 driveAccessToken={driveAccessToken}
-                onAppendPhoto={handleAppendPhoto}
+                onAppendPhotos={handleAppendPhotos}
               />
             )}
             {activeView === "reconcile" && (

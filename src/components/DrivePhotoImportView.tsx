@@ -24,12 +24,12 @@ interface DrivePhotoImportViewProps {
   artifacts: Artifact[];
   onBack: () => void;
   driveAccessToken: string | null;
-  onAppendPhoto: (itemId: string, dataUrl: string) => Promise<void>;
+  onAppendPhotos: (itemId: string, dataUrls: string[]) => Promise<void>;
 }
 
 type ImportResult = "pending" | "success" | "failed";
 
-export default function DrivePhotoImportView({ artifacts, onBack, driveAccessToken, onAppendPhoto }: DrivePhotoImportViewProps) {
+export default function DrivePhotoImportView({ artifacts, onBack, driveAccessToken, onAppendPhotos }: DrivePhotoImportViewProps) {
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [onlyMissingPhotos, setOnlyMissingPhotos] = useState(true);
 
@@ -39,7 +39,8 @@ export default function DrivePhotoImportView({ artifacts, onBack, driveAccessTok
   const [loadProgress, setLoadProgress] = useState({ done: 0, total: 0 });
   const [driveError, setDriveError] = useState("");
 
-  const [assignments, setAssignments] = useState<Record<string, string | null>>({}); // itemId -> driveFileId
+  // itemId -> Drive file IDs selected for it. An item can take more than one.
+  const [assignments, setAssignments] = useState<Record<string, string[]>>({});
 
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState({ done: 0, total: 0 });
@@ -98,17 +99,18 @@ export default function DrivePhotoImportView({ artifacts, onBack, driveAccessTok
       }
       setPreviews(loaded);
 
-      // Auto-suggest the best-matching Drive photo per item, above a
-      // reasonably confident similarity threshold. Always overridable below.
+      // Auto-suggest the single best-matching Drive photo per item, above a
+      // reasonably confident similarity threshold. Always addable/removable
+      // below — this is just a starting point, not a requirement.
       const items = groups.find((g) => g.room === room)?.items || [];
-      const nextAssignments: Record<string, string | null> = {};
+      const nextAssignments: Record<string, string[]> = {};
       for (const item of items) {
         let best: { id: string; score: number } | null = null;
         for (const file of files) {
           const score = nameSimilarity(file.name, item.name);
           if (score > 0.5 && (!best || score > best.score)) best = { id: file.id, score };
         }
-        nextAssignments[item.id] = best ? best.id : null;
+        nextAssignments[item.id] = best ? [best.id] : [];
       }
       setAssignments(nextAssignments);
     } catch (err: any) {
@@ -118,23 +120,32 @@ export default function DrivePhotoImportView({ artifacts, onBack, driveAccessTok
     }
   };
 
-  const assignedCount = Object.values(assignments).filter(Boolean).length;
+  const togglePhotoForItem = (itemId: string, fileId: string) => {
+    setAssignments((prev) => {
+      const current = prev[itemId] || [];
+      const next = current.includes(fileId) ? current.filter((id) => id !== fileId) : [...current, fileId];
+      return { ...prev, [itemId]: next };
+    });
+  };
+
+  const assignedItemCount = Object.values(assignments).filter((ids) => ids.length > 0).length;
+  const assignedPhotoCount = Object.values(assignments).reduce((sum, ids) => sum + ids.length, 0);
 
   const runImport = async () => {
-    const toImport = Object.entries(assignments).filter(([, fileId]) => fileId);
+    const toImport = Object.entries(assignments).filter(([, ids]) => ids.length > 0);
     if (toImport.length === 0) return;
     setImporting(true);
     setImportProgress({ done: 0, total: toImport.length });
     const results: Record<string, ImportResult> = {};
 
-    for (const [itemId, fileId] of toImport) {
-      const dataUrl = fileId ? previews[fileId] : null;
+    for (const [itemId, fileIds] of toImport) {
+      const dataUrls = fileIds.map((id) => previews[id]).filter(Boolean) as string[];
       try {
-        if (!dataUrl) throw new Error("Preview not loaded");
-        await onAppendPhoto(itemId, dataUrl);
+        if (dataUrls.length === 0) throw new Error("Preview(s) not loaded");
+        await onAppendPhotos(itemId, dataUrls);
         results[itemId] = "success";
       } catch (err) {
-        console.error("Failed to import photo for", itemId, err);
+        console.error("Failed to import photos for", itemId, err);
         results[itemId] = "failed";
       }
       setImportResults({ ...results });
@@ -197,7 +208,7 @@ export default function DrivePhotoImportView({ artifacts, onBack, driveAccessTok
             <FolderOpen className="w-5 h-5 text-[#3b5249]" /> {selectedRoom}
           </h2>
           <p className="text-xs text-[#6e645a] font-serif italic mt-0.5">
-            Click a Drive photo to assign it to an item, then import.
+            Click one or more Drive photos to assign them to an item, then import.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -242,48 +253,71 @@ export default function DrivePhotoImportView({ artifacts, onBack, driveAccessTok
         <>
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] font-mono text-[#6e645a]">
-              {driveFiles.length} Drive photos found · {assignedCount} assigned
+              {driveFiles.length} Drive photos found · {assignedPhotoCount} selected across {assignedItemCount} item(s)
             </p>
             <button
               onClick={runImport}
-              disabled={assignedCount === 0 || importing}
+              disabled={assignedItemCount === 0 || importing}
               className={`p-1.5 px-4 text-white rounded font-bold text-xs uppercase font-mono flex items-center gap-1.5 border shadow transition active:scale-95 ${
-                assignedCount === 0 || importing
+                assignedItemCount === 0 || importing
                   ? "bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed"
                   : "bg-[#3b5249] border-[#2f423a] hover:bg-[#2f423a] cursor-pointer"
               }`}
             >
               {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
-              {importing ? `Importing ${importProgress.done}/${importProgress.total}...` : `Import ${assignedCount} Photos`}
+              {importing ? `Importing ${importProgress.done}/${importProgress.total}...` : `Import ${assignedPhotoCount} Photos`}
             </button>
           </div>
 
           <div className="space-y-3">
             {roomItems.map((item) => {
-              const assignedId = assignments[item.id];
+              const assignedIds = assignments[item.id] || [];
               const result = importResults[item.id];
+              const existingPhotos = item.photos || [];
               return (
-                <div key={item.id} className="p-3 bg-[#fdfcf7] border border-[#dcd6c8] rounded-lg space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-xs font-serif font-bold text-[#1c1a18] truncate">{item.name}</p>
-                      <span className="text-[9px] font-mono text-[#8e847a]">{item.id} · {(item.photos || []).length} existing photo(s)</span>
+                <div key={item.id} className="p-3 bg-[#fdfcf7] border border-[#dcd6c8] rounded-lg space-y-2.5">
+                  {/* Full item context so near-duplicate names (e.g. two
+                      "Marble Table"s in the same room) can be told apart. */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-serif font-bold text-[#1c1a18]">{item.name}</p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] font-mono text-[#8e847a] mt-0.5">
+                        <span>{item.id}</span>
+                        <span>{item.category}{item.subCategory ? ` / ${item.subCategory}` : ""}</span>
+                        {item.material && <span>Material: {item.material}</span>}
+                        {item.dimensions && <span>Size: {item.dimensions}</span>}
+                        {item.quantity && item.quantity > 1 && <span>Qty: {item.quantity}</span>}
+                        <span>Condition: {item.condition}</span>
+                      </div>
+                      {item.description && (
+                        <p className="text-[10px] text-[#6e645a] font-sans mt-1 italic">{item.description}</p>
+                      )}
                     </div>
                     {result === "success" && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
                     {result === "failed" && <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />}
                   </div>
+
+                  {existingPhotos.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[8px] font-mono uppercase text-[#8e847a] shrink-0">Already has:</span>
+                      <div className="flex gap-1 overflow-x-auto">
+                        {existingPhotos.map((url, i) => (
+                          <img key={i} src={url} alt="" className="w-8 h-8 rounded object-cover border border-[#dcd6c8] shrink-0" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {driveFiles.map((file) => {
-                      const isAssigned = assignedId === file.id;
+                      const isAssigned = assignedIds.includes(file.id);
                       const preview = previews[file.id];
                       return (
                         <button
                           key={file.id}
                           type="button"
                           title={file.name}
-                          onClick={() =>
-                            setAssignments((prev) => ({ ...prev, [item.id]: isAssigned ? null : file.id }))
-                          }
+                          onClick={() => togglePhotoForItem(item.id, file.id)}
                           className={`relative shrink-0 w-16 h-16 rounded border-2 overflow-hidden cursor-pointer transition-all ${
                             isAssigned ? "border-[#3b5249] ring-2 ring-[#3b5249]/40" : "border-[#dcd6c8] hover:border-[#8c745c]"
                           }`}
