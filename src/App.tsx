@@ -36,6 +36,7 @@ import AddEditFormView from "./components/AddEditFormView";
 import BulkImportView from "./components/BulkImportView";
 import QRHubView from "./components/QRHubView";
 import GuestStoryQRHubView from "./components/GuestStoryQRHubView";
+import DrivePhotoImportView from "./components/DrivePhotoImportView";
 import ReconciliationReportView from "./components/ReconciliationReportView";
 import TeamView from "./components/TeamView";
 import StaffLogView from "./components/StaffLogView";
@@ -52,7 +53,7 @@ import {
   Compass, Layers, MapPin, QrCode, FileText, Users,
   User as UserIcon, LogOut, Menu, X, Download, Sparkles,
   FileSpreadsheet, Camera, Trash2, Shield, CalendarDays, ClipboardList, ImagePlus,
-  BookOpen
+  BookOpen, FolderOpen
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -71,6 +72,12 @@ export default function App() {
   // Auth state
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  // Google OAuth access token with Drive read scope, captured from the
+  // Supabase session — used by the Drive Photo Import feature. Supabase
+  // doesn't auto-refresh this (it's a provider token, not the Supabase JWT),
+  // so it can go stale after ~1hr; googleDrive.ts surfaces a clear error
+  // when that happens rather than failing silently.
+  const [driveAccessToken, setDriveAccessToken] = useState<string | null>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
@@ -103,6 +110,7 @@ export default function App() {
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
+        setDriveAccessToken(session.provider_token || null);
         await handleUserSession(session.user.id, session.user.email || "", session.user.user_metadata?.full_name || "");
       } else {
         // No Supabase session — clear stale data and show login
@@ -114,6 +122,7 @@ export default function App() {
     // Listen for auth changes (OAuth redirect back)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
+        if (session.provider_token) setDriveAccessToken(session.provider_token);
         if (loadedUserIdRef.current === session.user.id) {
           // Same user already loaded — this is just a tab-refocus session
           // revalidation, not a real new login. Skip the reload entirely.
@@ -130,6 +139,7 @@ export default function App() {
         setArtifacts([]);
         setStaff([]);
         setActivity([]);
+        setDriveAccessToken(null);
         loadedUserIdRef.current = null;
         setIsAuthLoading(false);
       }
@@ -353,7 +363,7 @@ subscription.unsubscribe();
     let targetView = view;
     if ((view === "reconcile" || view === "team") && !isAdmin) targetView = "dashboard";
     if (view === "admin" && userRole !== "SUPER_ADMIN") targetView = "dashboard";
-    if ((view === "add" || view === "edit" || view === "bulk" || view === "photointake") && isOwnerView) targetView = "dashboard";
+    if ((view === "add" || view === "edit" || view === "bulk" || view === "photointake" || view === "driveimport") && isOwnerView) targetView = "dashboard";
 
     setActiveView(targetView);
 
@@ -399,6 +409,18 @@ subscription.unsubscribe();
   const handleUpdateStory = async (itemId: string, patch: { story: string; description: string }) => {
     await updateArtifact(itemId, patch, { name: currentUser?.name || "", email: currentUser?.email || "" });
     setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, ...patch } : a)));
+  };
+
+  // Appends one photo (as a data URL) to an item's existing photos — used
+  // by Drive Photo Import so pulling a photo in from Drive doesn't clobber
+  // whatever photos the item already has.
+  const handleAppendPhoto = async (itemId: string, newPhotoDataUrl: string) => {
+    const item = artifacts.find((a) => a.id === itemId);
+    if (!item) return;
+    const updatedPhotos = [...(item.photos || []), newPhotoDataUrl];
+    const resolvedPhotos = await resolvePhotosForStorage(updatedPhotos, item.currentLocation || "unassigned", itemId);
+    await updateArtifact(itemId, { photos: resolvedPhotos }, { name: currentUser?.name || "", email: currentUser?.email || "" });
+    setArtifacts((prev) => prev.map((a) => (a.id === itemId ? { ...a, photos: resolvedPhotos } : a)));
   };
 
   const handleAddDuty = async (duty: {
@@ -878,6 +900,7 @@ subscription.unsubscribe();
                 { id: "team", label: "Team Activities", icon: Users },
                 { id: "stafflog", label: "Staff Duty Log", icon: ClipboardList },
               { id: "photointake", label: "Rapid Photo Intake", icon: ImagePlus },
+                { id: "driveimport", label: "Drive Photo Import", icon: FolderOpen },
                 { id: "admin", label: "Admin Panel", icon: Shield },
               ].filter(m => {
                 if (m.id === "reconcile" || m.id === "team") {
@@ -886,7 +909,7 @@ subscription.unsubscribe();
                 if (m.id === "admin") {
                   return userRole === "SUPER_ADMIN";
                 }
-                if (m.id === "photointake" || m.id === "bulk") {
+                if (m.id === "photointake" || m.id === "bulk" || m.id === "driveimport") {
                   return !isOwnerView;
                 }
                 return true;
@@ -965,6 +988,14 @@ subscription.unsubscribe();
                 onBack={() => navigateToView("dashboard")}
                 canEditStory={!isOwnerView}
                 onUpdateStory={handleUpdateStory}
+              />
+            )}
+            {activeView === "driveimport" && (
+              <DrivePhotoImportView
+                artifacts={artifacts}
+                onBack={() => navigateToView("dashboard")}
+                driveAccessToken={driveAccessToken}
+                onAppendPhoto={handleAppendPhoto}
               />
             )}
             {activeView === "reconcile" && (
