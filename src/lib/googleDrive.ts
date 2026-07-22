@@ -41,7 +41,10 @@ export class DriveFolderNotAccessibleError extends Error {}
 // folder the account has no access to, which is indistinguishable from a
 // genuinely empty folder unless checked separately like this.
 async function assertFolderAccessible(folderId: string, accessToken: string): Promise<void> {
-  const url = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,trashed`;
+  // supportsAllDrives is required or Drive silently 404s a folder that's
+  // actually a shared folder living inside someone else's Shared Drive —
+  // visible and browsable in the Drive UI, invisible to a plain API call.
+  const url = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,trashed&supportsAllDrives=true`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (res.status === 401) {
     throw new DriveAuthError(
@@ -66,7 +69,9 @@ async function assertFolderAccessible(folderId: string, accessToken: string): Pr
 export async function listImagesInFolder(folderId: string, accessToken: string): Promise<DriveImageFile[]> {
   await assertFolderAccessible(folderId, accessToken);
   const q = encodeURIComponent(`'${folderId}' in parents and mimeType contains 'image/' and trashed = false`);
-  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=500`;
+  const url =
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=500` +
+    `&supportsAllDrives=true&includeItemsFromAllDrives=true`;
   const res = await driveFetch(url, accessToken);
   const data = await res.json();
   return data.files || [];
@@ -110,7 +115,7 @@ async function downscaleDataUrl(dataUrl: string): Promise<string> {
 }
 
 export async function fetchDriveImageAsDataUrl(fileId: string, accessToken: string): Promise<string> {
-  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`;
   const res = await driveFetch(url, accessToken);
   const blob = await res.blob();
   const dataUrl = await blobToDataUrl(blob);

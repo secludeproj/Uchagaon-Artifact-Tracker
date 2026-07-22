@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Artifact } from "../types";
-import { MapPin, ArrowRight, Layers, Eye } from "lucide-react";
+import { MapPin, ArrowRight, Layers, Eye, Search, X } from "lucide-react";
 import { REAL_ROOMS, blockForLocation, canonicalizeRoomName, sameRoom } from "../lib/locations";
 
 interface ByLocationViewProps {
@@ -9,6 +9,7 @@ interface ByLocationViewProps {
 }
 
 export default function ByLocationView({ artifacts, onNavigate }: ByLocationViewProps) {
+  const [searchQuery, setSearchQuery] = useState("");
   // Grouping items by their dynamic currentLocation attribute.
   // Seeded with every real room first (even ones with 0 items currently),
   // so the property's full layout is always visible, not just rooms that
@@ -48,6 +49,27 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
     return a.localeCompare(b);
   });
 
+  // Search matches either the room name itself (showing every item in that
+  // room), or an item's name/id/category/material within a room (showing
+  // just the matching items, room hidden entirely if nothing in it matches).
+  const query = searchQuery.trim().toLowerCase();
+  const itemMatches = (item: Artifact) =>
+    [item.name, item.id, item.category, item.subCategory, item.material]
+      .filter(Boolean)
+      .some((f) => (f as string).toLowerCase().includes(query));
+
+  const visibleLocationKeys = query
+    ? locationKeys.filter(
+        (location) => location.toLowerCase().includes(query) || groupedLocations[location].some(itemMatches)
+      )
+    : locationKeys;
+
+  const itemsForLocation = (location: string): Artifact[] => {
+    const items = groupedLocations[location];
+    if (!query || location.toLowerCase().includes(query)) return items;
+    return items.filter(itemMatches);
+  };
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -61,17 +83,42 @@ export default function ByLocationView({ artifacts, onNavigate }: ByLocationView
         </p>
       </div>
 
+      <div className="relative max-w-md">
+        <Search className="w-4 h-4 text-[#8e847a] absolute left-3 top-3.5" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search room, item name, ID, category, or material..."
+          className="w-full pl-9 pr-9 py-2.5 bg-white border border-[#c8c2b5] rounded text-xs focus:outline-none focus:border-[#3b5249] font-sans"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-3 text-[#8e847a] hover:text-[#1c1a18] cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       {locationKeys.length === 0 ? (
         <div className="bg-[#fdfcf7] border border-[#dcd6c8] p-12 text-center rounded">
           <MapPin className="w-8 h-8 text-[#c4bcae] mx-auto mb-2" />
           <p className="text-xs text-[#8e847a]">No active locations mapped in historical records.</p>
         </div>
+      ) : visibleLocationKeys.length === 0 ? (
+        <div className="bg-[#fdfcf7] border border-[#dcd6c8] p-12 text-center rounded">
+          <Search className="w-8 h-8 text-[#c4bcae] mx-auto mb-2" />
+          <p className="text-xs text-[#8e847a]">No rooms or items match "{searchQuery}".</p>
+        </div>
       ) : (
         <div className="space-y-6">
           {(() => {
             let lastBlock = "";
-            return locationKeys.map((location) => {
-              const items = groupedLocations[location];
+            return visibleLocationKeys.map((location) => {
+              const items = itemsForLocation(location);
               const sumValue = items.reduce((sum, i) => sum + i.estimatedValue, 0);
               const thisBlock = blockForLocation(location);
               const showBlockHeader = thisBlock !== lastBlock;

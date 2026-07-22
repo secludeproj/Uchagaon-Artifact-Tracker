@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Artifact } from "../types";
-import { QrCode, Printer, CheckSquare, Square, XCircle, FileText } from "lucide-react";
+import { QrCode, Printer, CheckSquare, Square, XCircle, FileText, Search, X } from "lucide-react";
 import QRGenerator from "./QRGenerator";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
@@ -21,6 +21,7 @@ export default function QRHubView({ artifacts, onBack }: QRHubViewProps) {
 
   const [isInsideIframe, setIsInsideIframe] = useState(false);
   const [groupByRoomEnabled, setGroupByRoomEnabled] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.self !== window.top) {
@@ -29,6 +30,20 @@ export default function QRHubView({ artifacts, onBack }: QRHubViewProps) {
   }, []);
 
   const groups = useMemo(() => groupByRoom(artifacts), [artifacts]);
+
+  // Search only narrows what's visible in the checklist to pick from — it
+  // never affects which items are already selected, even if they scroll
+  // out of view while a search is active.
+  const query = searchQuery.trim().toLowerCase();
+  const matchesSearch = (item: Artifact) =>
+    !query ||
+    [item.name, item.id, item.category, item.subCategory, item.material]
+      .filter(Boolean)
+      .some((f) => (f as string).toLowerCase().includes(query));
+  const visibleGroups = query
+    ? groups.map((g) => ({ ...g, items: g.items.filter(matchesSearch) })).filter((g) => g.items.length > 0)
+    : groups;
+  const visibleFlatArtifacts = artifacts.filter(matchesSearch);
 
   const toggleSelectItem = (id: string) => {
     setSelectedIds((prev) =>
@@ -284,11 +299,33 @@ export default function QRHubView({ artifacts, onBack }: QRHubViewProps) {
             <p className="text-[10px] font-mono text-[#8e847a]">Select which items' labels you wish to generate.</p>
           </div>
 
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-[#8e847a] absolute left-2.5 top-2.5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search room, name, ID, category, material..."
+              className="w-full pl-8 pr-8 py-2 bg-white border border-[#c8c2b5] rounded text-xs focus:outline-none focus:border-[#3b5249] font-sans"
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2.5 top-2.5 text-[#8e847a] hover:text-[#1c1a18] cursor-pointer">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
           <div className="h-px bg-[#ece6da]"></div>
 
           <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            {query && visibleGroups.length === 0 && groupByRoomEnabled && (
+              <p className="text-[10px] font-mono text-[#8e847a] text-center py-4">No items match "{searchQuery}".</p>
+            )}
+            {query && visibleFlatArtifacts.length === 0 && !groupByRoomEnabled && (
+              <p className="text-[10px] font-mono text-[#8e847a] text-center py-4">No items match "{searchQuery}".</p>
+            )}
             {groupByRoomEnabled ? (
-              groups.map(({ room, items }) => {
+              visibleGroups.map(({ room, items }) => {
                 const allSelected = items.every((i) => selectedIds.includes(i.id));
                 const someSelected = items.some((i) => selectedIds.includes(i.id));
                 return (
@@ -330,7 +367,7 @@ export default function QRHubView({ artifacts, onBack }: QRHubViewProps) {
                 );
               })
             ) : (
-              artifacts.map((item) => {
+              visibleFlatArtifacts.map((item) => {
                 const selected = selectedIds.includes(item.id);
                 return (
                   <div

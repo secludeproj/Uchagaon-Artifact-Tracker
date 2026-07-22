@@ -17,6 +17,7 @@ import {
   X,
   Save,
   Loader2,
+  Search,
 } from "lucide-react";
 
 interface GuestStoryQRHubViewProps {
@@ -33,8 +34,21 @@ export default function GuestStoryQRHubView({ artifacts, onBack, canEditStory, o
   const [storyDraft, setStoryDraft] = useState("");
   const [descriptionDraft, setDescriptionDraft] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const groups = useMemo(() => groupByRoom(artifacts), [artifacts]);
+
+  // Search only narrows the checklist to pick from — it never deselects an
+  // already-checked item even if it scrolls out of view while searching.
+  const query = searchQuery.trim().toLowerCase();
+  const matchesSearch = (item: Artifact) =>
+    !query ||
+    [item.name, item.id, item.category, item.subCategory, item.material]
+      .filter(Boolean)
+      .some((f) => (f as string).toLowerCase().includes(query));
+  const visibleGroups = query
+    ? groups.map((g) => ({ ...g, items: g.items.filter(matchesSearch) })).filter((g) => g.items.length > 0)
+    : groups;
 
   const toggleSelectItem = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
@@ -233,9 +247,30 @@ export default function GuestStoryQRHubView({ artifacts, onBack, canEditStory, o
             <h4 className="font-serif text-sm font-bold text-[#1c1a18]">Room-by-Room Checklist</h4>
             <p className="text-[10px] font-mono text-[#8e847a]">Select items, or check off a whole room at once.</p>
           </div>
+
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-[#8e847a] absolute left-2.5 top-2.5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search room, name, ID, category, material..."
+              className="w-full pl-8 pr-8 py-2 bg-white border border-[#c8c2b5] rounded text-xs focus:outline-none focus:border-[#3b5249] font-sans"
+            />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2.5 top-2.5 text-[#8e847a] hover:text-[#1c1a18] cursor-pointer">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
           <div className="h-px bg-[#ece6da]"></div>
 
-          {groups.map(({ block, room, items }) => {
+          {query && visibleGroups.length === 0 && (
+            <p className="text-[10px] font-mono text-[#8e847a] text-center py-4">No items match "{searchQuery}".</p>
+          )}
+
+          {visibleGroups.map(({ block, room, items }) => {
             const allSelected = items.every((i) => selectedIds.includes(i.id));
             const someSelected = items.some((i) => selectedIds.includes(i.id));
             return (
