@@ -3,6 +3,7 @@ import { Artifact } from "../types";
 import { groupByRoom } from "../lib/locations";
 import {
   DriveAuthError,
+  DriveFolderNotAccessibleError,
   DriveImageFile,
   extractDriveFolderId,
   fetchDriveImageAsDataUrl,
@@ -114,7 +115,11 @@ export default function DrivePhotoImportView({ artifacts, onBack, driveAccessTok
       }
       setAssignments(nextAssignments);
     } catch (err: any) {
-      setDriveError(err instanceof DriveAuthError ? err.message : `Could not load this room's Drive folder: ${err.message}`);
+      setDriveError(
+        err instanceof DriveAuthError || err instanceof DriveFolderNotAccessibleError
+          ? err.message
+          : `Could not load this room's Drive folder: ${err.message}`
+      );
     } finally {
       setLoadingDrive(false);
     }

@@ -33,7 +33,38 @@ async function driveFetch(url: string, accessToken: string): Promise<Response> {
   return res;
 }
 
+export class DriveFolderNotAccessibleError extends Error {}
+
+// Confirms the signed-in account can actually see this folder before
+// listing its contents. This matters because Drive's files.list with a
+// "'<id>' in parents" query returns an empty array — not a 403 — for a
+// folder the account has no access to, which is indistinguishable from a
+// genuinely empty folder unless checked separately like this.
+async function assertFolderAccessible(folderId: string, accessToken: string): Promise<void> {
+  const url = `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,trashed`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (res.status === 401) {
+    throw new DriveAuthError(
+      "Google Drive access has expired or was never granted. Please sign out and sign back in, and approve the Drive permission request."
+    );
+  }
+  if (res.status === 404 || res.status === 403) {
+    throw new DriveFolderNotAccessibleError(
+      "This Drive folder isn't shared with your Google account (or was moved/deleted) — that's why it shows no photos. Ask whoever owns it to share the folder with your account, then try again."
+    );
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Drive API error (${res.status}): ${text}`);
+  }
+  const data = await res.json();
+  if (data.trashed) {
+    throw new DriveFolderNotAccessibleError("This Drive folder has been moved to trash — that's why it shows no photos.");
+  }
+}
+
 export async function listImagesInFolder(folderId: string, accessToken: string): Promise<DriveImageFile[]> {
+  await assertFolderAccessible(folderId, accessToken);
   const q = encodeURIComponent(`'${folderId}' in parents and mimeType contains 'image/' and trashed = false`);
   const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=500`;
   const res = await driveFetch(url, accessToken);
