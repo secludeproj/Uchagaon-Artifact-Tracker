@@ -97,6 +97,13 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isGlobalScannerOpen, setIsGlobalScannerOpen] = useState(false);
   const [itemToDeleteId, setItemToDeleteId] = useState<string | null>(null);
+  // Item Detail is reached from many different places (All Artifacts, By
+  // Location, QR Hub selection, Dashboard's recent items...) unlike the
+  // other top-level hubs, which are always entered fresh from the sidebar
+  // with one consistent origin. Its Back button — and the post-delete
+  // redirect, since delete only happens from Item Detail — should return
+  // to wherever that actually was, not a fixed screen.
+  const [detailReturnView, setDetailReturnView] = useState<string>("dashboard");
 
   // ── Auth: Listen to Supabase session ───────────────────────────────────────
 
@@ -365,6 +372,14 @@ subscription.unsubscribe();
     if (view === "admin" && userRole !== "SUPER_ADMIN") targetView = "dashboard";
     if ((view === "add" || view === "edit" || view === "bulk" || view === "photointake" || view === "driveimport") && isOwnerView) targetView = "dashboard";
 
+    // Only capture a fresh return view when actually arriving at Item Detail
+    // from somewhere else — not when bouncing back from Edit, which already
+    // explicitly returns to "item-detail" itself and would otherwise
+    // overwrite the real origin (e.g. "location") with "edit".
+    if (targetView === "item-detail" && activeView !== "item-detail" && activeView !== "edit") {
+      setDetailReturnView(activeView);
+    }
+
     setActiveView(targetView);
 
     if (targetView === "all" && targetId) {
@@ -575,7 +590,7 @@ subscription.unsubscribe();
         { id: currentUser.id, name: currentUser.name, email: currentUser.email }
       );
       setItemToDeleteId(null);
-      navigateToView("all");
+      navigateToView(detailReturnView);
       await loadAllData();
     } catch (err: any) {
       console.error("Delete error:", err);
@@ -1035,7 +1050,7 @@ subscription.unsubscribe();
             )}
             {activeView === "item-detail" && selectedItemId && (
               <ItemDetailView itemId={selectedItemId} artifacts={artifacts} currentUser={currentUser}
-                onBack={() => navigateToView("all")}
+                onBack={() => navigateToView(detailReturnView)}
                 onEdit={(id) => navigateToView("edit", id)}
                 onMoveTransaction={handleCustodyMove}
                 onDeleteTrigger={handleDeleteItem}
